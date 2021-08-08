@@ -10,8 +10,23 @@
     "lint": "eslint ."
   },
   "dependencies": {
+    "@react-native-community/masked-view": "^0.1.11",
+    "@react-navigation/native": "^6.0.2",
+    "@react-navigation/stack": "^6.0.2",
+    "expo-speech": "^9.2.1",
     "react": "17.0.1",
-    "react-native": "0.64.2"
+    "react-native": "0.64.2",
+    "react-native-camera": "^4.0.1",
+    "react-native-fs": "^2.18.0",
+    "react-native-gesture-handler": "^1.10.3",
+    "react-native-image-crop-picker": "^0.36.2",
+    "react-native-reanimated": "^2.2.0",
+    "react-native-safe-area-context": "^3.3.0",
+    "react-native-screens": "^3.5.0",
+    "react-native-tesseract-ocr": "^2.0.3",
+    "react-native-video": "^5.1.1",
+    "react-swipeable-views-native": "^0.13.2",
+    "typescript": "^4.3.5"
   },
   "devDependencies": {
     "@babel/core": "7.15.0",
