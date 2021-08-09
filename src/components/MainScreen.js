@@ -42,7 +42,7 @@ class MainScreen extends React.Component{
             </Pressable>
             </View>
             <View style = {{flex : 1, alignItems : 'center', justifyContent : 'center'}} value={1}>
-            <Text style={styles.txt} >Uhear이에요.</Text>
+            <Text style={styles.txt} >Uhear에요.</Text>
             </View>
             <View style = {{flex : 1, alignItems : 'center', justifyContent : 'center'}} value={2}>
             <Pressable onPress={this.handlePressBarcode}
