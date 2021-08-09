@@ -6,6 +6,12 @@ platform :ios, '10.0'
 target 'UHear' do
   config = use_native_modules!
 
+  # to use firebase
+  pod 'react-native-camera', path: '../node_modules/react-native-camera', subspecs: [
+  'TextDetector',
+  'BarcodeDetectorMLKit'
+]
+
   use_react_native!(
     :path => config[:reactNativePath],
     # to enable hermes on iOS, change `false` to `true` and then install pods
