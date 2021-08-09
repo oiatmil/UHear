@@ -43,7 +43,7 @@ class PictureScreen extends React.Component{
                 }
 
                 <TouchableOpacity onPress={() => this.takePicture(camera)} style={styles.button}>
-                  <Text style={{ fontSize: 14 }}> SNAP </Text>
+                  <Text style={{ fontSize: 14 }}> UTONG </Text>
                 </TouchableOpacity>
               </View>
             );
