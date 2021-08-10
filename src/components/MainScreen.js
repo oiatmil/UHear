@@ -16,11 +16,18 @@ import Tts from 'react-native-tts';
 class MainScreen extends React.Component {
   state = {
     pausePreview: false,
+    image: 'none', // 유통기한 이미지 주소.
+  };
+
+  returnData = image => {
+    this.setState({image: image});
   };
 
   handlePressPicture = () => {
     console.log('Go to picture ');
-    this.props.navigation.navigate('ExpiryDateScreen');
+    this.props.navigation.navigate('ExpiryDateScreen', {
+      returnData: this.returnData,
+    });
   };
 
   handlePressBarcode = () => {
@@ -30,7 +37,9 @@ class MainScreen extends React.Component {
 
   speak = (index1, index2) => {
     if (index1 === 0 && index2 === 1)
-      this.props.navigation.navigate('ExpiryDateScreen');
+      this.props.navigation.navigate('ExpiryDateScreen', {
+        returnData: this.returnData,
+      });
     if (index1 === 2 && index2 === 1)
       this.props.navigation.navigate('BarcodeScreen');
     if ((index1 === 1 && index2 === 0) || (index1 === 1 && index2 === 2))
@@ -41,7 +50,7 @@ class MainScreen extends React.Component {
     Tts.speak(
       '유희얼입니다.왼쪽으로 스와이프하면 유통기한, 오른쪽으로 스와이프하면 바코드를 알 수 있습니다.',
     );
-    const {pausePreview} = this.state;
+    const {image, pausePreview} = this.state;
     return (
       <SwipeableViews
         style={styles.mainMenu}
@@ -51,7 +60,7 @@ class MainScreen extends React.Component {
           style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}
           value={0}>
           <Pressable onPress={this.handlePressPicture} style={styles.btn}>
-            <Text style={styles.txt}>아무데나 누르면 유통기한</Text>
+            <Text style={styles.txt}>{image}</Text>
           </Pressable>
         </View>
         <View

@@ -75,16 +75,22 @@ class ExpiryDateScreen extends React.Component {
     console.log('data: ', str);
   };
 
-  takePicture = async function (camera) {
+  takePicture = () => {
     const options = {quality: 0.5, base64: true};
-    const data = await camera.takePictureAsync(options);
-    //  eslint-disable-next-line
-    const source = data.uri;
-    if (source) {
-      await camera.pausePreview();
-      console.log('picture source', source);
-      this.setState({pausePreview: true});
+
+    try {
+      this.camera.takePictureAsync(options).then(data => {
+        this.goBack(data.uri);
+      });
+    } catch (error) {
+      console.error(error);
     }
+  };
+
+  goBack = image => {
+    const {navigation, route} = this.props;
+    route.params.returnData(image);
+    navigation.goBack();
   };
 
   resumePicture = async function (camera) {
