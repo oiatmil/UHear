@@ -2,6 +2,7 @@ import React from 'react';
 import {View, TouchableOpacity, StyleSheet, Text} from 'react-native';
 import {RNCamera} from 'react-native-camera';
 import PendingView from './PendingView';
+import Tts from 'react-native-tts';
 
 class ExpiryDateScreen extends React.Component {
   state = {
@@ -66,6 +67,7 @@ class ExpiryDateScreen extends React.Component {
 
     if (str.startsWith('20')) {
       str = str.substr(0, 8);
+      this.takePicture();
     } else if (str.startsWith('2')) {
       str = str.substr(0.6);
     } else {
@@ -77,7 +79,6 @@ class ExpiryDateScreen extends React.Component {
 
   takePicture = () => {
     const options = {quality: 0.5, base64: true};
-
     try {
       this.camera.takePictureAsync(options).then(data => {
         this.goBack(data.uri);
@@ -97,6 +98,10 @@ class ExpiryDateScreen extends React.Component {
     await camera.resumePreview();
     this.setState({pausePreview: false});
   };
+
+  componentDidMount() {
+    Tts.speak('유통기한 카메라 입니다.');
+  }
 
   render() {
     const {pausePreview} = this.state;
