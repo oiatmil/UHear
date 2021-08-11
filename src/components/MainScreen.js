@@ -36,6 +36,7 @@ class MainScreen extends React.Component {
   };
 
   speak = (index1, index2) => {
+    Tts.stop();
     if (index1 === 0 && index2 === 1)
       this.props.navigation.navigate('ExpiryDateScreen', {
         returnData: this.returnData,
@@ -46,10 +47,13 @@ class MainScreen extends React.Component {
       Tts.speak('홈 화면입니다.');
   };
 
-  render() {
+  componentDidMount() {
     Tts.speak(
       '유희얼입니다.왼쪽으로 스와이프하면 유통기한, 오른쪽으로 스와이프하면 바코드를 알 수 있습니다.',
     );
+  }
+
+  render() {
     const {image, pausePreview} = this.state;
     return (
       <SwipeableViews
