@@ -2,72 +2,106 @@ import React from 'react';
 import {View, TouchableOpacity, StyleSheet, Text} from 'react-native';
 import {RNCamera} from 'react-native-camera';
 import PendingView from './PendingView';
+import Tts from 'react-native-tts';
+import BarcodeData from '../../data/barcodeData.json';
 
 class BarcodeScreen extends React.Component {
   state = {
     pausePreview: false,
+    canDetectBarcode: true,
+    barcodes: [],
   };
 
-  render() {
-    const {pausePreview} = this.state;
+  renderCamera() {
+    const {canDetectBarcode} = this.state;
+    console.log('canDetect:' + canDetectBarcode);
     return (
-      <View style={styles.container}>
-        <RNCamera
-          style={styles.preview}
-          captureAudio={false}
-          type={RNCamera.Constants.Type.back}
-          flashMode={RNCamera.Constants.FlashMode.off}
-          androidCameraPermissionOptions={{
-            title: 'Permission to use camera',
-            message: 'We need your permission to use your camera',
-            buttonPositive: 'Ok',
-            buttonNegative: 'Cancel',
-          }}>
-          {({camera, status}) => {
-            if (status !== 'READY') return <PendingView />;
-            return (
-              <View
-                style={{
-                  flex: 0,
-                  flexDirection: 'row',
-                  justifyContent: 'center',
-                }}>
-                {pausePreview ? (
-                  <TouchableOpacity
-                    style={styles.button}
-                    onPress={() => this.resumePicture(camera)}>
-                    <Text>Aceptar</Text>
-                  </TouchableOpacity>
-                ) : null}
-
-                <TouchableOpacity
-                  onPress={() => this.takePicture(camera)}
-                  style={styles.button}>
-                  <Text style={{fontSize: 14}}> BARCODE </Text>
-                </TouchableOpacity>
-              </View>
-            );
-          }}
-        </RNCamera>
-      </View>
+      <RNCamera
+        style={{width: '100%', height: '100%'}}
+        type={RNCamera.Constants.Type.back}
+        autoFocus={RNCamera.Constants.AutoFocus.on}
+        captureAudio={false}
+        androidCameraPermissionOptions={{
+          title: 'Permission to use camera',
+          message: 'We need your permission to use your camera',
+          buttonPositive: 'Ok',
+          buttonNegative: 'Cancel',
+        }}
+        ref={ref => {
+          this.camera = ref;
+        }}
+        onGoogleVisionBarcodesDetected={
+          canDetectBarcode ? this.barcodeRecognized : null
+        }
+        googleVisionBarcodeMode={
+          RNCamera.Constants.GoogleVisionBarcodeDetection.BarcodeMode.ALTERNATE
+        }
+        googleVisionBarcodeType={
+          RNCamera.Constants.GoogleVisionBarcodeDetection.BarcodeType.ALL
+        }>
+        {!!canDetectBarcode && this.renderBarcodes()}
+      </RNCamera>
     );
   }
-  takePicture = async function (camera) {
-    const options = {quality: 0.5, base64: true};
-    const data = await camera.takePictureAsync(options);
-    //  eslint-disable-next-line
-    const source = data.uri;
-    if (source) {
-      await camera.pausePreview();
-      console.log('picture source', source);
-      this.setState({pausePreview: true});
+
+  barcodeRecognized = object => {
+    const {barcodes} = object;
+    this.setState({barcodes});
+    if (barcodes.length) {
+      this.findProductName(barcodes[0].data);
     }
   };
 
-  resumePicture = async function (camera) {
-    await camera.resumePreview();
-    this.setState({pausePreview: false});
+  //renderBarcodes와 renderBarcode는 없어도 무관. (시각적으로 영역 표시만 하는 역할임.)
+  renderBarcodes = () => {
+    return (
+      <View pointerEvents="none">
+        {this.state.barcodes.map(this.renderBarcode)}
+      </View>
+    );
   };
+
+  renderBarcode = ({bounds, data, type}) => {
+    return (
+      <React.Fragment key={data + bounds.origin.x}>
+        <View
+          style={[
+            styles.text,
+            {...bounds.size, left: bounds.origin.x, top: bounds.origin.y},
+          ]}>
+          <Text style={[styles.textBlock]}>{`${data} ${type}`}</Text>
+        </View>
+      </React.Fragment>
+    );
+  };
+
+  //내부 barcodeData.JSON 파일 이용
+  //코드 개선 필요.
+  findProductName = data => {
+    canDetectBarcode = false;
+    for (var i = 0; i < BarcodeData.DATA.length; i++) {
+      if (data == BarcodeData.DATA[i].BAR_CD) {
+        this.goBack(BarcodeData.DATA[i].PRDLST_NM);
+        return;
+      }
+    }
+    this.goBack('none');
+    return;
+  };
+
+  goBack = productName => {
+    const {navigation, route} = this.props;
+    route.params.returnBarcodeData(productName);
+    navigation.goBack();
+  };
+
+  componentDidMount() {
+    Tts.speak('바코드 카메라 입니다. ');
+  }
+
+  render() {
+    return <View style={styles.container}>{this.renderCamera()}</View>;
+  }
 }
 
 const styles = StyleSheet.create({
@@ -89,6 +123,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     alignSelf: 'center',
     margin: 20,
+  },
+  text: {
+    padding: 10,
+    borderWidth: 2,
+    borderRadius: 2,
+    position: 'absolute',
+    borderColor: '#F00',
+    justifyContent: 'center',
+  },
+  textBlock: {
+    color: '#F00',
+    position: 'absolute',
+    textAlign: 'center',
+    //fontSize: 40,
+    backgroundColor: 'transparent',
   },
 });
 

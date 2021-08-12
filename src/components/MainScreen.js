@@ -21,10 +21,15 @@ const DEFAULT_WIDTH=600;
 class MainScreen extends React.Component {
   state = {
     pausePreview: false,
+    imageIsExist: false,
     image: 'none', // 유통기한 이미지 주소.
+    productNameIsExist: false,
+    productName: 'none',
+    //~IsExist state는 Tts의 반복을 막기 위해 사용함. 그러나 imageIsExist는 큰 효과를 모르겠음.
   };
   //const [text, setText] = useState('');
 
+<<<<<<< HEAD
   returnData = async(image) => {
     this.setState({image: image});
     console.log('image:',image);
@@ -43,40 +48,68 @@ class MainScreen extends React.Component {
     //     console.error(err);
     //     setText('');
     //   }
+=======
+  returnImageData = image => {
+    if (!this.state.imageIsExist) {
+      this.setState({image: image});
+      this.state.imageIsExist = true;
+      Tts.stop();
+      Tts.speak('유통기한 데이터가 맞는지 확인 중입니다.');
+    }
+  };
+
+  returnBarcodeData = data => {
+    if (!this.state.productNameIsExist) {
+      this.setState({productName: data});
+      this.state.productNameIsExist = true;
+      Tts.stop();
+      Tts.speak(`찾은 상품명은 ${data}입니다.`);
+    }
+>>>>>>> origin/main
   };
 
   handlePressPicture = () => {
     console.log('Go to picture ');
+    this.state.imageIsExist = false;
     this.props.navigation.navigate('ExpiryDateScreen', {
-      returnData: this.returnData,
+      returnImageData: this.returnImageData,
     });
   };
 
   handlePressBarcode = () => {
     console.log('Go to Barcode');
-    this.props.navigation.navigate('BarcodeScreen');
+    this.state.productNameIsExist = false;
+    this.props.navigation.navigate('BarcodeScreen', {
+      returnBarcodeData: this.returnBarcodeData,
+    });
   };
 
   speak = (index1, index2) => {
     Tts.stop();
-    if (index1 === 0 && index2 === 1)
+    if (index1 === 0 && index2 === 1) {
+      this.state.imageIsExist = false;
       this.props.navigation.navigate('ExpiryDateScreen', {
-        returnData: this.returnData,
+        returnImageData: this.returnImageData,
       });
-    if (index1 === 2 && index2 === 1)
-      this.props.navigation.navigate('BarcodeScreen');
+    }
+    if (index1 === 2 && index2 === 1) {
+      this.state.productNameIsExist = false;
+      this.props.navigation.navigate('BarcodeScreen', {
+        returnBarcodeData: this.returnBarcodeData,
+      });
+    }
     if ((index1 === 1 && index2 === 0) || (index1 === 1 && index2 === 2))
       Tts.speak('홈 화면입니다.');
   };
 
   componentDidMount() {
     Tts.speak(
-      '유희얼입니다.왼쪽으로 스와이프하면 유통기한, 오른쪽으로 스와이프하면 바코드를 알 수 있습니다.',
+      '유희얼입니다... 왼쪽으로 스와이프하면 유통기한, 오른쪽으로 스와이프하면 바코드를 알 수 있습니다.',
     );
   }
 
   render() {
-    const {image, pausePreview} = this.state;
+    const {image, productName, pausePreview} = this.state;
     return (
       <SwipeableViews
         style={styles.mainMenu}
@@ -101,7 +134,7 @@ class MainScreen extends React.Component {
           style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}
           value={2}>
           <Pressable onPress={this.handlePressBarcode} style={styles.btn}>
-            <Text style={styles.txt}>아무데나 누르면 바코드</Text>
+            <Text style={styles.txt}>{productName}</Text>
           </Pressable>
         </View>
       </SwipeableViews>

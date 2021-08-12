@@ -1,5 +1,11 @@
 import React from 'react';
-import {View, TouchableOpacity, StyleSheet, Text} from 'react-native';
+import {
+  View,
+  TouchableOpacity,
+  StyleSheet,
+  Text,
+  RefreshControlBase,
+} from 'react-native';
 import {RNCamera} from 'react-native-camera';
 import PendingView from './PendingView';
 import Tts from 'react-native-tts';
@@ -13,6 +19,7 @@ class ExpiryDateScreen extends React.Component {
 
   renderCamera() {
     const {canDetectText} = this.state;
+    const {navigation} = this.props;
     return (
       <RNCamera
         style={{width: '100%', height: '100%'}}
@@ -28,7 +35,7 @@ class ExpiryDateScreen extends React.Component {
         ref={ref => {
           this.camera = ref;
         }}
-        onTextRecognized={canDetectText ? this.textRecognized : null}>
+        onTextRecognized={navigation.isFocused() ? this.textRecognized : null}>
         {!!canDetectText && this.renderTextBlocks()}
       </RNCamera>
     );
@@ -37,6 +44,7 @@ class ExpiryDateScreen extends React.Component {
   textRecognized = object => {
     const {textBlocks} = object;
     this.setState({textBlocks});
+    //console.log(textBlocks);
   };
 
   renderTextBlocks = () => (
@@ -78,10 +86,12 @@ class ExpiryDateScreen extends React.Component {
   };
 
   takePicture = () => {
+    const {navigation, route} = this.props;
+    navigation.goBack(); // 미리 이동 시켜서 여러번 촬영되는 것을 최대한 방지 (완벽한 해결책은 아니었음).
     const options = {quality: 0.5, base64: true};
     try {
       this.camera.takePictureAsync(options).then(data => {
-        this.goBack(data.uri);
+        route.params.returnImageData(data.uri);
       });
     } catch (error) {
       console.error(error);
@@ -90,10 +100,11 @@ class ExpiryDateScreen extends React.Component {
 
   goBack = image => {
     const {navigation, route} = this.props;
-    route.params.returnData(image);
+    route.params.returnImageData(image);
     navigation.goBack();
   };
 
+  //사용하지 않는 메소드.
   resumePicture = async function (camera) {
     await camera.resumePreview();
     this.setState({pausePreview: false});
