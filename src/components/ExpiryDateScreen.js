@@ -9,12 +9,17 @@ import {
 import {RNCamera} from 'react-native-camera';
 import PendingView from './PendingView';
 import Tts from 'react-native-tts';
+import { stat } from 'react-native-fs';
+
+
 
 class ExpiryDateScreen extends React.Component {
   state = {
     pausePreview: false,
     canDetectText: true,
     textBlocks: [],
+    numbbber: 1,
+    utong_speak:''
   };
 
   renderCamera() {
@@ -35,13 +40,18 @@ class ExpiryDateScreen extends React.Component {
         ref={ref => {
           this.camera = ref;
         }}
-        onTextRecognized={navigation.isFocused() ? this.textRecognized : null}>
+        onTextRecognized={canDetectText ? this.textRecognized : null}>
         {!!canDetectText && this.renderTextBlocks()}
       </RNCamera>
     );
   }
 
   textRecognized = object => {
+    if (this.state.utong_speak == '')//유통기한 음성이 여러번 나오는 경우를 방지.
+      var timer  = this.state.numbbber++;//시간 안에 유통기한 인식 못 했을 때 나오는 음성.
+    console.log(timer);
+    if(timer % 10 == 0)
+      Tts.speak('사물의 다른 면을 찍어주세요.');
     const {textBlocks} = object;
     this.setState({textBlocks});
     //console.log(textBlocks);
@@ -53,7 +63,7 @@ class ExpiryDateScreen extends React.Component {
     </View>
   );
 
-  renderTextBlock = ({bounds, value}) => {
+  renderTextBlock = ({bounds, value}) => { //여기서 화면을 전환하는 동작도 필요할듯... 재귀로다가 4번...
     this.logTextData(value);
     return (
       <React.Fragment key={value + bounds.origin.x}>
@@ -72,10 +82,26 @@ class ExpiryDateScreen extends React.Component {
   logTextData = value => {
     console.log('value: ', value);
     var str = String(value).replace(/[^0-9]/g, '');
-
-    if (str.startsWith('20')) {
-      str = str.substr(0, 8);
-      this.takePicture();
+    if (str.includes('20') || str.includes('28')) { //0이 8로 찍히는 경우 대비
+      if (str.length >= 7)
+      {
+        if (str.includes('8'))
+        {
+          str = (str[str.indexOf('28')+ 1] == '8') ? str.replace(str[str.indexOf('28') + 1],'0') : str;
+          str = (str[str.indexOf('28')+ 5] == '8') ? str.replace(str[str.indexOf('28') + 5],'0') : str;
+          str = (str[str.indexOf('28')+ 7] == '8') ? str.replace(str[str.indexOf('28') + 7],'0') : str;
+        }
+        str = str.substring(str.indexOf('20'), str.indexOf('20') + 8);
+        console.log('substring:',str);// 20이 포함되어있기만 해도 그 인덱스부터 8글자
+        //추가로 해야할 것 : 20부터 해서 8글자가 맞는 숫자형식으로 이루어져있어야함. ex)월은 첫글자가 0~1..
+        str = str.substr(0, 8);
+        if (this.state.utong_speak == '')//유통기한 알려주는 음성 한번만 나오도록
+        {
+          this.state.utong_speak = '제품의 유통기한은'+str.substring(0,4)+'년'+str.substring(4,6)+'월'+str.substring(6,8)+'일 까지입니다.';
+          Tts.speak(this.state.utong_speak+'다시 듣기를 원하시면 화면을 한 번 터치해주세요.');
+        }
+        this.takePicture();
+      }
     } else if (str.startsWith('2')) {
       str = str.substr(0.6);
     } else {
@@ -86,28 +112,20 @@ class ExpiryDateScreen extends React.Component {
   };
 
   takePicture = () => {
-    const {navigation, route} = this.props;
-    navigation.goBack(); // 미리 이동 시켜서 여러번 촬영되는 것을 최대한 방지 (완벽한 해결책은 아니었음).
     const options = {quality: 0.5, base64: true};
     try {
       this.camera.takePictureAsync(options).then(data => {
-        route.params.returnImageData(data.uri);
+        this.goBack(data.uri, this.state.utong_speak);
       });
     } catch (error) {
       console.error(error);
     }
   };
 
-  goBack = image => {
+  goBack = (image, utong_speak) => {
     const {navigation, route} = this.props;
-    route.params.returnImageData(image);
+    route.params.returnImageData(image, utong_speak);
     navigation.goBack();
-  };
-
-  //사용하지 않는 메소드.
-  resumePicture = async function (camera) {
-    await camera.resumePreview();
-    this.setState({pausePreview: false});
   };
 
   componentDidMount() {

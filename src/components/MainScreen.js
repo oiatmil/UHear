@@ -13,6 +13,8 @@ import SwipeableViews from 'react-swipeable-views-native';
 import {RNCamera} from 'react-native-camera';
 import PendingView from './PendingView';
 import Tts from 'react-native-tts';
+import { ImagePicker, Permissions } from 'expo';
+import uuid from 'uuid';
 import TesseractOcr, {LANG_KOREAN, useEventListener} from 'react-native-tesseract-ocr';
 
 const DEFAULT_HEIGHT=500;
@@ -23,40 +25,43 @@ class MainScreen extends React.Component {
     pausePreview: false,
     imageIsExist: false,
     image: 'none', // 유통기한 이미지 주소.
+    utong_speak:'',
     productNameIsExist: false,
     productName: 'none',
-    //~IsExist state는 Tts의 반복을 막기 위해 사용함. 그러나 imageIsExist는 큰 효과를 모르겠음.
+    fullTextAnnotation: 'none',
+    help_num: 0
   };
-  //const [text, setText] = useState('');
 
-<<<<<<< HEAD
-  returnData = async(image) => {
-    this.setState({image: image});
-    console.log('image:',image);
-    // try {
-    //     //const tesseractOptions = {};
-    //     var recognizedText = TesseractOcr.recognize(image,LANG_KOREAN,tesseractOptions);
-    //     //console.log('나는 어떻게나올까',recognizedText);
-    //     //if recognizedText 에 유통기한이라는 글자 있으면 그 뒤에 말을 setText로 삼고 그것을 변수로 두고 읽기
-    //     // if (recognizedText.includes('짧다')){
-    //     //   recognizedText = "유통기한 찾았다.";
-    //     //   setText(recognizedText);
-    //     // }
-    //     //setText(recognizedText);
-    //     //Speech.speak(recognizedText, {language : 'ko'});
-    //   } catch (err) {
-    //     console.error(err);
-    //     setText('');
-    //   }
-=======
-  returnImageData = image => {
+  returnImageData = (image, utong_speak) => {
     if (!this.state.imageIsExist) {
       this.setState({image: image});
+      this.setState({utong_speak: utong_speak});
+      console.log('유통기한:',utong_speak);
       this.state.imageIsExist = true;
-      Tts.stop();
-      Tts.speak('유통기한 데이터가 맞는지 확인 중입니다.');
+      //Tts.stop();
+      //Tts.speak('유통기한 데이터가 맞는지 확인 중입니다.');
     }
   };
+
+  speak_utong = () =>{
+    const {utong_speak} = this.state;
+    if (this.state.imageIsExist){//Image가 있다는 것은 유통기한을 찾았음을 의미하므로
+      Tts.speak(utong_speak);//이 때 화면을 클릭하면 유통기한을 다시 읽어줌.
+    }
+  }
+
+  speak_help = () =>{//누를 때마다 새로운 주의사항 말해줌.
+    this.state.help_num++;
+    this.state.help_num = (this.state.help_num >= 4) ? this.state.help_num = 1 : this.state.help_num;
+    console.log(this.state.help_num);
+    Tts.stop();
+    if (this.state.help_num == 1)
+      Tts.speak('윗면과 아랫면이 있는 제품의 경우 윗면이나 아랫면을 먼저 보여주시면 더 빨리 찾으실 수 있습니다.');
+    if (this.state.help_num == 2)
+      Tts.speak('카메라는 밝은 곳에서 실행해야 인식이 잘 됩니다.');
+     if (this.state.help_num == 3)
+      Tts.speak('제품의 유통기한 글자가 바래졌을 경우 인식이 어려울 수 있습니다.');
+  }
 
   returnBarcodeData = data => {
     if (!this.state.productNameIsExist) {
@@ -65,7 +70,6 @@ class MainScreen extends React.Component {
       Tts.stop();
       Tts.speak(`찾은 상품명은 ${data}입니다.`);
     }
->>>>>>> origin/main
   };
 
   handlePressPicture = () => {
@@ -104,12 +108,13 @@ class MainScreen extends React.Component {
 
   componentDidMount() {
     Tts.speak(
-      '유희얼입니다... 왼쪽으로 스와이프하면 유통기한, 오른쪽으로 스와이프하면 바코드를 알 수 있습니다.',
+      '유희얼입니다. 왼쪽으로 스와이프 시 유통기한, 오른쪽으로 스와이프 시 바코드를 알 수 있습니다.'
+      +'주의사항 듣기를 원하시면 화면을 길게 눌러주세요.'
     );
   }
 
   render() {
-    const {image, productName, pausePreview} = this.state;
+    const {image, productName, pausePreview, utong_speak} = this.state;
     return (
       <SwipeableViews
         style={styles.mainMenu}
@@ -118,17 +123,21 @@ class MainScreen extends React.Component {
         <View
           style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}
           value={0}>
+            <Pressable onPress={this.speak_utong} style={styles.btn}>
               {image && (
                     <View style={styles.imageContainer}>
                         <Image style={styles.image} source={{uri:image}} />
-                        <Text>{image}</Text>
+                        <Text>{utong_speak}</Text>
                     </View>
                 )}
+            </Pressable>
         </View>
         <View
           style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}
           value={1}>
-          <Text style={styles.txt}>Uhear이에요</Text>
+            <Pressable onLongPress={this.speak_help} style={styles.btn}>
+              <Text style={styles.txt}>Uhear이에요</Text>
+            </Pressable>
         </View>
         <View
           style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}
