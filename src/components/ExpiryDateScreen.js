@@ -47,7 +47,7 @@ class ExpiryDateScreen extends React.Component {
   }
 
   textRecognized = object => {
-    if (this.state.utong_speak == '')//유통기한 음성이 여러번 나오는 경우를 방지.
+    if (this.state.utong_speak == '')//유통기한 음성이 여러번 나오는 경우를
       var timer  = this.state.numbbber++;//시간 안에 유통기한 인식 못 했을 때 나오는 음성.
     console.log(timer);
     if(timer % 10 == 0)
