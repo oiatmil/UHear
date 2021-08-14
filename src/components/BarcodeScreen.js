@@ -81,17 +81,17 @@ class BarcodeScreen extends React.Component {
     canDetectBarcode = false;
     for (var i = 0; i < BarcodeData.DATA.length; i++) {
       if (data == BarcodeData.DATA[i].BAR_CD) {
-        this.goBack(BarcodeData.DATA[i].PRDLST_NM);
+        this.goBack(`찾은 상품명은 ${BarcodeData.DATA[i].PRDLST_NM}입니다.`);
         return;
       }
     }
-    this.goBack('none');
+    this.goBack('바코드에 해당되는 상품 데이터가 없습니다.');
     return;
   };
 
-  goBack = productName => {
+  goBack = barcode_speak => {
     const {navigation, route} = this.props;
-    route.params.returnBarcodeData(productName);
+    route.params.returnBarcodeData(barcode_speak);
     navigation.goBack();
   };
 
