@@ -6,89 +6,96 @@ import {
   StyleSheet,
   Button,
   Text,
-  Image
+  Image,
 } from 'react-native';
 import {RectButton} from 'react-native-gesture-handler';
 import SwipeableViews from 'react-swipeable-views-native';
 import {RNCamera} from 'react-native-camera';
 import PendingView from './PendingView';
 import Tts from 'react-native-tts';
-import { ImagePicker, Permissions } from 'expo';
+import {ImagePicker, Permissions} from 'expo';
 import uuid from 'uuid';
-import TesseractOcr, {LANG_KOREAN, useEventListener} from 'react-native-tesseract-ocr';
+import TesseractOcr, {
+  LANG_KOREAN,
+  useEventListener,
+} from 'react-native-tesseract-ocr';
 
-const DEFAULT_HEIGHT=500;
-const DEFAULT_WIDTH=600;
+const DEFAULT_HEIGHT = 500;
+const DEFAULT_WIDTH = 600;
 
 class MainScreen extends React.Component {
   state = {
     pausePreview: false,
     imageIsExist: false,
     image: 'none', // 유통기한 이미지 주소.
-    utong_speak:'',
+    expdate_speak: '',
+    barcode_speak: '',
     productNameIsExist: false,
-    productName: 'none',
     fullTextAnnotation: 'none',
-    help_num: 0
+    help_num: 0,
   };
 
-  returnImageData = (image, utong_speak) => {
+  returnImageData = (image, expdate_speak) => {
     if (!this.state.imageIsExist) {
-      this.setState({image: image});
-      this.setState({utong_speak: utong_speak});
-      console.log('유통기한:',utong_speak);
+      this.setState({image: image, expdate_speak: expdate_speak});
+      Tts.stop();
+      Tts.speak(
+        `${this.state.expdate_speak} 다시 듣기를 원하시면 화면을 한 번 터치해주세요.`,
+      );
       this.state.imageIsExist = true;
-      //Tts.stop();
-      //Tts.speak('유통기한 데이터가 맞는지 확인 중입니다.');
     }
   };
 
-  speak_utong = () =>{
-    const {utong_speak} = this.state;
-    if (this.state.imageIsExist){//Image가 있다는 것은 유통기한을 찾았음을 의미하므로
-      Tts.speak(utong_speak);//이 때 화면을 클릭하면 유통기한을 다시 읽어줌.
+  replay_expdate = () => {
+    const {expdate_speak} = this.state;
+    if (this.state.imageIsExist) {
+      //Image가 있다는 것은 유통기한을 찾았음을 의미하므로
+      Tts.stop();
+      Tts.speak(expdate_speak); //이 때 화면을 클릭하면 유통기한을 다시 읽어줌.
     }
-  }
+  };
 
-  speak_help = () =>{//누를 때마다 새로운 주의사항 말해줌.
+  returnBarcodeData = barcode_speak => {
+    if (!this.state.productNameIsExist) {
+      this.setState({barcode_speak: barcode_speak});
+      Tts.stop();
+      Tts.speak(
+        `${barcode_speak} 다시 듣기를 원하시면 화면을 한 번 터치해주세요.`,
+      );
+      this.state.productNameIsExist = true;
+    }
+  };
+
+  replay_barcode = () => {
+    const {barcode_speak} = this.state;
+    if (this.state.productNameIsExist) {
+      Tts.stop();
+      Tts.speak(barcode_speak);
+    }
+  };
+
+  speak_help = () => {
+    //누를 때마다 새로운 주의사항 말해줌.
     this.state.help_num++;
-    this.state.help_num = (this.state.help_num >= 4) ? this.state.help_num = 1 : this.state.help_num;
+    this.state.help_num =
+      this.state.help_num >= 4
+        ? (this.state.help_num = 1)
+        : this.state.help_num;
     console.log(this.state.help_num);
     Tts.stop();
     if (this.state.help_num == 1)
-      Tts.speak('윗면과 아랫면이 있는 제품의 경우 윗면이나 아랫면을 먼저 보여주시면 더 빨리 찾으실 수 있습니다.');
+      Tts.speak(
+        '윗면과 아랫면이 있는 제품의 경우 윗면이나 아랫면을 먼저 보여주시면 더 빨리 찾으실 수 있습니다.',
+      );
     if (this.state.help_num == 2)
       Tts.speak('카메라는 밝은 곳에서 실행해야 인식이 잘 됩니다.');
-     if (this.state.help_num == 3)
-      Tts.speak('제품의 유통기한 글자가 바래졌을 경우 인식이 어려울 수 있습니다.');
-  }
-
-  returnBarcodeData = data => {
-    if (!this.state.productNameIsExist) {
-      this.setState({productName: data});
-      this.state.productNameIsExist = true;
-      Tts.stop();
-      Tts.speak(`찾은 상품명은 ${data}입니다.`);
-    }
+    if (this.state.help_num == 3)
+      Tts.speak(
+        '제품의 유통기한 글자가 바래졌을 경우 인식이 어려울 수 있습니다.',
+      );
   };
 
-  handlePressPicture = () => {
-    console.log('Go to picture ');
-    this.state.imageIsExist = false;
-    this.props.navigation.navigate('ExpiryDateScreen', {
-      returnImageData: this.returnImageData,
-    });
-  };
-
-  handlePressBarcode = () => {
-    console.log('Go to Barcode');
-    this.state.productNameIsExist = false;
-    this.props.navigation.navigate('BarcodeScreen', {
-      returnBarcodeData: this.returnBarcodeData,
-    });
-  };
-
-  speak = (index1, index2) => {
+  changeScreen = (index1, index2) => {
     Tts.stop();
     if (index1 === 0 && index2 === 1) {
       this.state.imageIsExist = false;
@@ -108,42 +115,42 @@ class MainScreen extends React.Component {
 
   componentDidMount() {
     Tts.speak(
-      '유희얼입니다. 왼쪽으로 스와이프 시 유통기한, 오른쪽으로 스와이프 시 바코드를 알 수 있습니다.'
-      +'주의사항 듣기를 원하시면 화면을 길게 눌러주세요.'
+      '유희얼입니다. 왼쪽으로 스와이프 시 유통기한, 오른쪽으로 스와이프 시 바코드를 알 수 있습니다.' +
+        '주의사항 듣기를 원하시면 화면을 길게 눌러주세요.',
     );
   }
 
   render() {
-    const {image, productName, pausePreview, utong_speak} = this.state;
+    const {image, expdate_speak, barcode_speak} = this.state;
     return (
       <SwipeableViews
         style={styles.mainMenu}
         index={1}
-        onChangeIndex={this.speak}>
+        onChangeIndex={this.changeScreen}>
         <View
           style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}
           value={0}>
-            <Pressable onPress={this.speak_utong} style={styles.btn}>
-              {image && (
-                    <View style={styles.imageContainer}>
-                        <Image style={styles.image} source={{uri:image}} />
-                        <Text>{utong_speak}</Text>
-                    </View>
-                )}
-            </Pressable>
+          <Pressable onPress={this.replay_expdate} style={styles.btn}>
+            {image && (
+              <View style={styles.imageContainer}>
+                <Image style={styles.image} source={{uri: image}} />
+                <Text>{expdate_speak}</Text>
+              </View>
+            )}
+          </Pressable>
         </View>
         <View
           style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}
           value={1}>
-            <Pressable onLongPress={this.speak_help} style={styles.btn}>
-              <Text style={styles.txt}>Uhear이에요</Text>
-            </Pressable>
+          <Pressable onLongPress={this.speak_help} style={styles.btn}>
+            <Text style={styles.txt}>Uhear이에요</Text>
+          </Pressable>
         </View>
         <View
           style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}
           value={2}>
-          <Pressable onPress={this.handlePressBarcode} style={styles.btn}>
-            <Text style={styles.txt}>{productName}</Text>
+          <Pressable onPress={this.replay_barcode} style={styles.btn}>
+            <Text style={styles.txt}>{barcode_speak}</Text>
           </Pressable>
         </View>
       </SwipeableViews>
