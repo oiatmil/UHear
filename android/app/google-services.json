@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "461678116085",
+    "project_id": "glass-quest-321509",
+    "storage_bucket": "glass-quest-321509.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:461678116085:android:a7dd0d6c3a95504905d9bc",
+        "android_client_info": {
+          "package_name": "com.uhear"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "461678116085-6576r8lsv3uac84k2u45qsp7kbp9eo3i.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.uhear",
+            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
+          }
+        },
+        {
+          "client_id": "461678116085-st8fjnosn4kdrlt9sug5pjam9daaonfc.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCwRb8VpWDWPdtytrWAo3wK__0pAl2BTic"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "461678116085-st8fjnosn4kdrlt9sug5pjam9daaonfc.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
