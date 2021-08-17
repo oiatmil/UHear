@@ -13,6 +13,7 @@ import SwipeableViews from 'react-swipeable-views-native';
 import {RNCamera} from 'react-native-camera';
 import PendingView from './PendingView';
 import Tts from 'react-native-tts';
+import RNMlKit from 'react-native-firebase-mlkit';
 import {ImagePicker, Permissions} from 'expo';
 import uuid from 'uuid';
 import TesseractOcr, {
@@ -43,7 +44,14 @@ class MainScreen extends React.Component {
         `${this.state.expdate_speak} 다시 듣기를 원하시면 화면을 한 번 터치해주세요.`,
       );
       this.state.imageIsExist = true;
+      this.readImageData(image);
     }
+  };
+
+  readImageData = async function (image){ //사진을 불러온 뒤 글자를 읽는 부분.
+    console.log('data.uri:', image);
+    const cloudTextRecognition = await RNMlKit.cloudTextRecognition(image);
+    console.log('Text Recognition Cloud: ', cloudTextRecognition);
   };
 
   replay_expdate = () => {
