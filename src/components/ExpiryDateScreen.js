@@ -17,6 +17,7 @@ class ExpiryDateScreen extends React.Component {
     canDetectText: true,
     textBlocks: [],
     numbbber: 1,
+    time_speak:false,
   };
 
   renderCamera() {
@@ -44,8 +45,9 @@ class ExpiryDateScreen extends React.Component {
   }
 
   textRecognized = object => {
-    var timer = this.state.numbbber++; //시간 안에 유통기한 인식 못 했을 때 나오는 음성.
-    //console.log(timer);
+    if (!this.state.time_speak)//유통기한을 읽은 뒤에도 타이머가 멈추지 않고 다른 면 찍어달라고 음성 나오는 경우 방지
+      var timer = this.state.numbbber++; //시간 안에 유통기한 인식 못 했을 때 나오는 음성.
+
     if (timer % 10 == 0) Tts.speak('사물의 다른 면을 찍어주세요.');
     const {textBlocks} = object;
     this.setState({textBlocks});
@@ -76,7 +78,7 @@ class ExpiryDateScreen extends React.Component {
   logTextData = value => {
     //일단 나도 나름대로 수정해봤는데..
     console.log('value: ', value);
-    var str = String(value).replace(/[^0-9]/g, '');
+    var str = String(value).trim().replace(/[^0-9]/g, '');
 
     //유통기한 데이터는 2로 시작해야 함.
     if (!str.startsWith('2')) {
@@ -112,16 +114,17 @@ class ExpiryDateScreen extends React.Component {
     this.takePicture(expdate_speak);
   };
 
-  takePicture = expdate_speak => {
+  takePicture = async function (expdate_speak) {
     const {navigation, route} = this.props;
-    navigation.goBack();
-
     const options = {quality: 0.5, base64: true};
-
+    this.state.time_speak = true;
+    const data = await this.camera.takePictureAsync(options);
+    const source = data.uri;
     try {
-      this.camera.takePictureAsync(options).then(data => {
+      if (source){
         route.params.returnImageData(data.uri, expdate_speak);
-      });
+        navigation.goBack();
+      }
     } catch (error) {
       console.error(error);
     }
