@@ -10,7 +10,6 @@ import {RNCamera} from 'react-native-camera';
 import PendingView from './PendingView';
 import Tts from 'react-native-tts';
 import {stat} from 'react-native-fs';
-import RNMlKit from 'react-native-firebase-mlkit';
 
 class ExpiryDateScreen extends React.Component {
   state = {
