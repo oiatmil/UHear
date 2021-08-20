@@ -1,11 +1,11 @@
-import React,{useEffect} from 'react';
+import React, {useEffect} from 'react';
 import {
   View,
   TouchableOpacity,
   StyleSheet,
   Text,
   RefreshControlBase,
-  DeviceEventEmitter
+  DeviceEventEmitter,
 } from 'react-native';
 import {RNCamera} from 'react-native-camera';
 import PendingView from './PendingView';
@@ -19,12 +19,11 @@ class ExpiryDateScreen extends React.Component {
     canDetectText: true,
     textBlocks: [],
     numbbber: 1,
-    return_num:1,
-    time_speak:false,
+    return_num: 1,
+    time_speak: false,
   };
   renderCamera() {
     const {canDetectText} = this.state;
-    const {navigation} = this.props;
     return (
       <RNCamera
         style={{width: '100%', height: '100%'}}
@@ -46,8 +45,9 @@ class ExpiryDateScreen extends React.Component {
     );
   }
   textRecognized = object => {
-    this.props.route.params.returnCheck(this.state.return_num++);//카메라에서 아무것도 찍지 않고 goback했을때를 처리하기 위함
-    if (!this.state.time_speak)//유통기한을 읽은 뒤에도 타이머가 멈추지 않고 다른 면 찍어달라고 음성 나오는 경우 방지
+    this.props.route.params.returnCheck(this.state.return_num++); //카메라에서 아무것도 찍지 않고 goback했을때를 처리하기 위함
+    if (!this.state.time_speak)
+      //유통기한을 읽은 뒤에도 타이머가 멈추지 않고 다른 면 찍어달라고 음성 나오는 경우 방지
       var timer = this.state.numbbber++; //시간 안에 유통기한 인식 못 했을 때 나오는 음성.
     if (timer % 10 == 0) Tts.speak('사물의 다른 면을 찍어주세요.');
     const {textBlocks} = object;
@@ -61,7 +61,7 @@ class ExpiryDateScreen extends React.Component {
   renderTextBlock = ({bounds, value}) => {
     //여기서 화면을 전환하는 동작도 필요할듯... 재귀로다가 4번...
     this.logTextData(value);
-    console.log("size",bounds.size.height);
+    console.log('size', bounds.size.height);
     return (
       <React.Fragment key={value + bounds.origin.x}>
         <Text
@@ -77,7 +77,9 @@ class ExpiryDateScreen extends React.Component {
   logTextData = value => {
     //일단 나도 나름대로 수정해봤는데..
     console.log('value: ', value);
-    var str = String(value).trim().replace(/[^0-9]/g, '');
+    var str = String(value)
+      .trim()
+      .replace(/[^0-9]/g, '');
     //유통기한 데이터는 2로 시작해야 함.
     if (!str.startsWith('2')) {
       return;
@@ -102,26 +104,53 @@ class ExpiryDateScreen extends React.Component {
       return;
     }
     var expdate_speak = `제품의 유통기한은 ${year}년 ${month}월 ${date}일 까지입니다.`;
-    this.takePicture(expdate_speak);
+    var expdate_str = String(value).substring(
+      String(value).indexOf('\n'),
+      String(value).length,
+    );
+    if (Platform.OS == 'android') {
+      this.takePictureforAndroid(expdate_speak, expdate_str);
+    } else if (Platform.OS == 'ios') {
+      this.takePictureforiOS(expdate_speak, expdate_str);
+    }
   };
-  takePicture = async function (expdate_speak) {
+
+  takePictureforAndroid = async function (expdate_speak, expdate_str) {
     const {navigation, route} = this.props;
     const options = {quality: 0.5, base64: true};
     this.state.time_speak = true;
     const data = await this.camera.takePictureAsync(options);
     const source = data.uri;
     try {
-      if (source){
-        route.params.returnImageData(data.uri, expdate_speak);
+      if (source) {
+        route.params.returnExpiryDateData(data.uri, expdate_speak, expdate_str);
         navigation.goBack();
       }
     } catch (error) {
       console.error(error);
     }
   };
+
+  takePictureforiOS = (expdate_speak, expdate_str) => {
+    const {navigation, route} = this.props;
+    navigation.goBack();
+    this.state.time_speak = true;
+    const options = {quality: 0.5, base64: true};
+    try {
+      this.camera.takePictureAsync(options).then(data => {
+        route.params.returnExpiryDateData(data.uri, expdate_speak, expdate_str);
+      });
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   componentDidMount() {
-    Tts.speak('유통기한 카메라 입니다. 사물을 세 뼘 정도 떨어뜨려 거리를 유지시켜주세요.');
+    Tts.speak(
+      '유통기한 카메라 입니다. 사물을 세 뼘 정도 떨어뜨려 거리를 유지시켜주세요.',
+    );
   }
+
   render() {
     const {pausePreview} = this.state;
     return <View style={styles.container}>{this.renderCamera()}</View>;

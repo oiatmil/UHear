@@ -335,6 +335,13 @@ PODS:
     - react-native-camera/RN
   - react-native-safe-area-context (3.3.0):
     - React-Core
+  - react-native-tesseract-ocr (2.0.3):
+    - React
+  - react-native-video (5.1.1):
+    - React-Core
+    - react-native-video/Video (= 5.1.1)
+  - react-native-video/Video (5.1.1):
+    - React-Core
   - React-perflogger (0.64.2)
   - React-RCTActionSheet (0.64.2):
     - React-Core/RCTActionSheetHeaders (= 0.64.2)
@@ -401,8 +408,19 @@ PODS:
     - React-perflogger (= 0.64.2)
   - RNCMaskedView (0.1.11):
     - React
+  - RNFS (2.18.0):
+    - React
   - RNGestureHandler (1.10.3):
     - React-Core
+  - RNImageCropPicker (0.36.2):
+    - React-Core
+    - React-RCTImage
+    - RNImageCropPicker/QBImagePickerController (= 0.36.2)
+    - TOCropViewController
+  - RNImageCropPicker/QBImagePickerController (0.36.2):
+    - React-Core
+    - React-RCTImage
+    - TOCropViewController
   - RNReanimated (2.2.0):
     - DoubleConversion
     - FBLazyVector
@@ -437,6 +455,7 @@ PODS:
     - React-RCTImage
   - TextToSpeech (4.1.0):
     - React
+  - TOCropViewController (2.6.0)
   - Yoga (1.14.0)
   - YogaKit (1.18.1):
     - Yoga (~> 1.14)
@@ -482,6 +501,8 @@ DEPENDENCIES:
   - react-native-camera/BarcodeDetectorMLKit (from `../node_modules/react-native-camera`)
   - react-native-camera/TextDetector (from `../node_modules/react-native-camera`)
   - react-native-safe-area-context (from `../node_modules/react-native-safe-area-context`)
+  - react-native-tesseract-ocr (from `../node_modules/react-native-tesseract-ocr`)
+  - react-native-video (from `../node_modules/react-native-video`)
   - React-perflogger (from `../node_modules/react-native/ReactCommon/reactperflogger`)
   - React-RCTActionSheet (from `../node_modules/react-native/Libraries/ActionSheetIOS`)
   - React-RCTAnimation (from `../node_modules/react-native/Libraries/NativeAnimation`)
@@ -495,7 +516,9 @@ DEPENDENCIES:
   - React-runtimeexecutor (from `../node_modules/react-native/ReactCommon/runtimeexecutor`)
   - ReactCommon/turbomodule/core (from `../node_modules/react-native/ReactCommon`)
   - "RNCMaskedView (from `../node_modules/@react-native-community/masked-view`)"
+  - RNFS (from `../node_modules/react-native-fs`)
   - RNGestureHandler (from `../node_modules/react-native-gesture-handler`)
+  - RNImageCropPicker (from `../node_modules/react-native-image-crop-picker`)
   - RNReanimated (from `../node_modules/react-native-reanimated`)
   - RNScreens (from `../node_modules/react-native-screens`)
   - TextToSpeech (from `../node_modules/react-native-tts`)
@@ -528,6 +551,7 @@ SPEC REPOS:
     - OpenSSL-Universal
     - PromisesObjC
     - Protobuf
+    - TOCropViewController
     - YogaKit
 
 EXTERNAL SOURCES:
@@ -565,6 +589,10 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-camera"
   react-native-safe-area-context:
     :path: "../node_modules/react-native-safe-area-context"
+  react-native-tesseract-ocr:
+    :path: "../node_modules/react-native-tesseract-ocr"
+  react-native-video:
+    :path: "../node_modules/react-native-video"
   React-perflogger:
     :path: "../node_modules/react-native/ReactCommon/reactperflogger"
   React-RCTActionSheet:
@@ -591,8 +619,12 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon"
   RNCMaskedView:
     :path: "../node_modules/@react-native-community/masked-view"
+  RNFS:
+    :path: "../node_modules/react-native-fs"
   RNGestureHandler:
     :path: "../node_modules/react-native-gesture-handler"
+  RNImageCropPicker:
+    :path: "../node_modules/react-native-image-crop-picker"
   RNReanimated:
     :path: "../node_modules/react-native-reanimated"
   RNScreens:
@@ -645,6 +677,8 @@ SPEC CHECKSUMS:
   React-jsinspector: cc614ec18a9ca96fd275100c16d74d62ee11f0ae
   react-native-camera: 73d0847088e62347ee35f99eccde524fbd3abd3e
   react-native-safe-area-context: 8465df05de8106c584b117f0e027e17174d6e02e
+  react-native-tesseract-ocr: 006c624b53e5af49fcb56d305b832532e9159aaf
+  react-native-video: 1574074179ecaf6a9dd067116c8f31bf9fec15c8
   React-perflogger: 25373e382fed75ce768a443822f07098a15ab737
   React-RCTActionSheet: af7796ba49ffe4ca92e7277a5d992d37203f7da5
   React-RCTAnimation: 6a2e76ab50c6f25b428d81b76a5a45351c4d77aa
@@ -658,10 +692,13 @@ SPEC CHECKSUMS:
   React-runtimeexecutor: a9904c6d0218fb9f8b19d6dd88607225927668f9
   ReactCommon: 149906e01aa51142707a10665185db879898e966
   RNCMaskedView: f127cd9652acfa31b91dcff613e07ba18b774db6
+  RNFS: 3ab21fa6c56d65566d1fb26c2228e2b6132e5e32
   RNGestureHandler: a479ebd5ed4221a810967000735517df0d2db211
+  RNImageCropPicker: 35a3ceb837446fa11547704709bb22b5fac6d584
   RNReanimated: 9c13c86454bfd54dab7505c1a054470bfecd2563
   RNScreens: 01ab149b5dd5c27f5ff26741b1d2bdf2cee1af35
   TextToSpeech: b3aa777ff5585705f179c0a2436bfd0926d1716e
+  TOCropViewController: 3105367e808b7d3d886a74ff59bf4804e7d3ab38
   Yoga: 575c581c63e0d35c9a83f4b46d01d63abc1100ac
   YogaKit: f782866e155069a2cca2517aafea43200b01fd5a
 
