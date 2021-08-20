@@ -20,7 +20,7 @@ import TesseractOcr, {
   LANG_KOREAN,
   useEventListener,
 } from 'react-native-tesseract-ocr';
-import { StackView } from '@react-navigation/stack/lib/commonjs';
+import {StackView} from '@react-navigation/stack/lib/commonjs';
 
 const DEFAULT_HEIGHT = 500;
 const DEFAULT_WIDTH = 600;
@@ -31,36 +31,100 @@ class MainScreen extends React.Component {
     imageIsExist: false,
     image: 'none', // 유통기한 이미지 주소.
     expdate_speak: '',
+    expdate_str: '',
     barcode_speak: '',
     productNameIsExist: false,
     fullTextAnnotation: 'none',
-    index_now:1,
-    stat_num:2,
+    index_now: 1,
+    stat_num: 2,
     help_num: 0,
   };
 
-  returnImageData = (image, expdate_speak) => {
+  returnExpiryDateData = (image, expdate_speak, expdate_str) => {
     if (!this.state.imageIsExist) {
-      this.setState({image: image, expdate_speak: expdate_speak});
-      Tts.stop();
-      Tts.speak(
-        `${this.state.expdate_speak} 다시 듣기를 원하시면 화면을 한 번 터치해주세요.`,
-        '유통기한 카메라를 다시 실행하고 싶으시면 화면을 길게 눌러주세요.'
-      );
+      this.setState({
+        image: image,
+        expdate_speak: expdate_speak,
+        expdate_str: expdate_str,
+      });
       this.state.imageIsExist = true;
-      //this.readImageData(image);
+      if (Platform.OS == 'ios') {
+        this.readImageDataforiOS();
+      } else if (Platform.OS == 'android') {
+        this.readImageDataforAndroid();
+      }
     }
   };
 
-  // readImageData = async function (image){ //사진을 불러온 뒤 글자를 읽는 부분.
-  //   console.log('data.uri:', image);
-  //   const cloudTextRecognition = await RNMlKit.cloudTextRecognition(image);
-  //   console.log('Text Recognition Cloud: ', cloudTextRecognition);
-  // };
+  readImageDataforiOS = () => {
+    var {expdate_str} = this.state;
+    this.identifyExpDate(expdate_str);
 
-  returnCheck = (status) => {
+    Tts.stop();
+    Tts.speak(
+      `${this.state.expdate_speak} 다시 듣기를 원하시면 화면을 한 번 터치해주세요.`,
+    );
+  };
+
+  //firebase-mlkit 사용 여부에 따라 바꾸기.
+  readImageDataforAndroid = async function (image) {
+    // readImageData = async function (image){ //사진을 불러온 뒤 글자를 읽는 부분.
+    //   console.log('data.uri:', image);
+    //   const cloudTextRecognition = await RNMlKit.cloudTextRecognition(image);
+    //   console.log('Text Recognition Cloud: ', cloudTextRecognition);
+    // };
+
+    var {expdate_str} = this.state;
+    this.identifyExpDate(expdate_str);
+
+    Tts.stop();
+    Tts.speak(
+      `${this.state.expdate_speak} 다시 듣기를 원하시면 화면을 한 번 터치해주세요.`,
+    );
+  };
+
+  identifyExpDate = inputStr => {
+    var str = String(inputStr).replace(/[^0-9]/g, '');
+    var index = 0;
+    if ((index = str.indexOf('2')) != -1) {
+      str = str.substring(index, str.length);
+    }
+
+    //2020년 유통기한에 대한 처리 (지금 시점에서 필요할지는 잘 모르겠음.)
+    if (str.startsWith('20') && parseInt(str.substring(2, 4)) < 13) {
+      str = '20' + str; // 이렇게 처리할 시, 2001~2012년도 사이 유통기한은 구할 수 없음.
+    }
+
+    // 여섯 자리 유통기한 포맷의 경우 여덟 자리 포맷으로 수정.
+    str = !str.startsWith('20') ? '20' + str : str;
+
+    // 여덟자리인지 확인. (자리 수가 모자라서 월일을 빼는 경우가 없도록.)
+    if (str.substr(0, 8).length != 8) {
+      return;
+    }
+
+    console.log('identifydata: ' + str);
+
+    var year = str.substring(0, 4);
+    var month = str.substring(4, 6);
+    var date = str.substring(6, 8);
+
+    //Date.parse() 를 할 수 있는 포맷으로 전환.
+    str = `${year}-${month}-${date}`;
+
+    //Date.parse()를 통해 유효한 날짜 데이터인지 확인.
+    if (isNaN(Date.parse(str))) {
+      return;
+    }
+
+    this.setState({
+      expdate_speak: `제품의 유통기한은 ${year}년 ${month}월 ${date}일 까지입니다.`,
+    });
+  };
+
+  returnCheck = status => {
     this.state.stat_num = status;
-  }
+  };
 
   replay_expdate = () => {
     const {expdate_speak} = this.state;
@@ -111,19 +175,21 @@ class MainScreen extends React.Component {
       );
   };
 
-  recamera_expdate = () =>{
+  recamera_expdate = () => {
     this.state.imageIsExist = false;
     this.props.navigation.navigate('ExpiryDateScreen', {
-      returnImageData: this.returnImageData, returnCheck:this.returnCheck
+      returnExpiryDateData: this.returnExpiryDateData,
+      returnCheck: this.returnCheck,
     });
-  }
+  };
 
   recamera_barcode = () => {
     this.state.productNameIsExist = false;
     this.props.navigation.navigate('BarcodeScreen', {
-      returnBarcodeData: this.returnBarcodeData, returnCheck:this.returnCheck
+      returnBarcodeData: this.returnBarcodeData,
+      returnCheck: this.returnCheck,
     });
-  }
+  };
 
   changeScreen = (index1, index2) => {
     Tts.stop();
@@ -131,13 +197,15 @@ class MainScreen extends React.Component {
     if (index1 === 0 && index2 === 1) {
       this.state.imageIsExist = false;
       this.props.navigation.navigate('ExpiryDateScreen', {
-        returnImageData: this.returnImageData, returnCheck:this.returnCheck
+        returnExpiryDateData: this.returnExpiryDateData,
+        returnCheck: this.returnCheck,
       });
     }
     if (index1 === 2 && index2 === 1) {
       this.state.productNameIsExist = false;
       this.props.navigation.navigate('BarcodeScreen', {
-        returnBarcodeData: this.returnBarcodeData, returnCheck:this.returnCheck
+        returnBarcodeData: this.returnBarcodeData,
+        returnCheck: this.returnCheck,
       });
     }
     if ((index1 === 1 && index2 === 0) || (index1 === 1 && index2 === 2))
@@ -152,35 +220,46 @@ class MainScreen extends React.Component {
     );
   }
 
-  consolelog() { //이 함수가 뭐냐면... 유통기한 카메라에서 아무것도 찍지 않고 이전버튼 눌러서 돌아왔을때 아무 소리가 안나 사용자가
+  consolelog() {
+    //이 함수가 뭐냐면... 유통기한 카메라에서 아무것도 찍지 않고 이전버튼 눌러서 돌아왔을때 아무 소리가 안나 사용자가
     var playTimer; //현재 어떤 상태인지 모르기때문에 10초에 한번씩 지금 유통기한 화면이라고 알려주는 함수
     var console_num = 0;
 
-    const playHandler = () =>{
-      if (this.state.index_now === 1) //홈화면으로가면
-      {
+    const playHandler = () => {
+      if (this.state.index_now === 1) {
+        //홈화면으로가면
         this.state.stat_num = 2;
         console_num = 0;
         clearInterval(playTimer); //유통기한 화면임을 알려주는 음성이 멈춤
       }
-      if (this.state.index_now === 0 && this.state.stat_num === console_num)//지금 카메라 실행중이 아닐 때만 음성이 나와야하므로 이를 확인시켜줌
-      {
+      if (this.state.index_now === 0 && this.state.stat_num === console_num) {
+        //지금 카메라 실행중이 아닐 때만 음성이 나와야하므로 이를 확인시켜줌
         Tts.stop();
         //console.log(this.state.stat_num, console_num);
-        Tts.speak('유통기한 화면입니다. 홈으로 가기를 원하시면 오른쪽으로 스와이프해주세요.');
-      }
-      else if (this.state.index_now === 0 && this.state.stat_num !== console_num)//여기서지정해놓은 console_num과 stat_num이 다르다는 뜻은 카메라가 실행중이라는 의미임
+        Tts.speak(
+          '유통기한 화면입니다. 홈으로 가기를 원하시면 오른쪽으로 스와이프해주세요.',
+        );
+      } else if (
+        this.state.index_now === 0 &&
+        this.state.stat_num !== console_num
+      )
+        //여기서지정해놓은 console_num과 stat_num이 다르다는 뜻은 카메라가 실행중이라는 의미임
         console_num = this.state.stat_num;
-      if (this.state.index_now === 2 && this.state.stat_num === console_num)//지금 카메라 실행중이 아닐 때만 음성이 나와야하므로 이를 확인시켜줌
-      {
+      if (this.state.index_now === 2 && this.state.stat_num === console_num) {
+        //지금 카메라 실행중이 아닐 때만 음성이 나와야하므로 이를 확인시켜줌
         //console.log(this.state.stat_num, console_num);
         Tts.stop();
-        Tts.speak('바코드 화면입니다. 홈으로 가기를 원하시면 왼쪽으로 스와이프해주세요.');
-      }
-      else if (this.state.index_now === 2 && this.state.stat_num !== console_num)//여기서지정해놓은 console_num과 stat_num이 다르다는 뜻은 카메라가 실행중이라는 의미임
+        Tts.speak(
+          '바코드 화면입니다. 홈으로 가기를 원하시면 왼쪽으로 스와이프해주세요.',
+        );
+      } else if (
+        this.state.index_now === 2 &&
+        this.state.stat_num !== console_num
+      )
+        //여기서지정해놓은 console_num과 stat_num이 다르다는 뜻은 카메라가 실행중이라는 의미임
         console_num = this.state.stat_num;
-    }
-    playTimer = setInterval(playHandler,15000); //setInterval로 홈화면으로 가기 전까지 계속 작동됨.
+    };
+    playTimer = setInterval(playHandler, 15000); //setInterval로 홈화면으로 가기 전까지 계속 작동됨.
   }
 
   render() {
@@ -193,7 +272,10 @@ class MainScreen extends React.Component {
         <View
           style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}
           value={0}>
-          <Pressable onPress={this.replay_expdate} onLongPress={this.recamera_expdate} style={styles.btn}>
+          <Pressable
+            onPress={this.replay_expdate}
+            onLongPress={this.recamera_expdate}
+            style={styles.btn}>
             <View style={styles.imageContainer}>
               <Image style={styles.image} source={{uri: image}} />
               <Text>{expdate_speak}</Text>
@@ -211,7 +293,10 @@ class MainScreen extends React.Component {
         <View
           style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}
           value={2}>
-          <Pressable onPress={this.replay_barcode} onLongPress={this.recamera_barcode} style={styles.btn}>
+          <Pressable
+            onPress={this.replay_barcode}
+            onLongPress={this.recamera_barcode}
+            style={styles.btn}>
             <Text style={styles.txt}>{barcode_speak}</Text>
             {barcode_speak != '' ? null : this.consolelog()}
           </Pressable>
