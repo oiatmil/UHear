@@ -158,17 +158,29 @@ class MainScreen extends React.Component {
 
     const playHandler = () =>{
       if (this.state.index_now === 1) //홈화면으로가면
+      {
+        this.state.stat_num = 2;
+        console_num = 0;
         clearInterval(playTimer); //유통기한 화면임을 알려주는 음성이 멈춤
+      }
       if (this.state.index_now === 0 && this.state.stat_num === console_num)//지금 카메라 실행중이 아닐 때만 음성이 나와야하므로 이를 확인시켜줌
-        Tts.speak('유통기한 화면입니다.');
+      {
+        Tts.stop();
+        //console.log(this.state.stat_num, console_num);
+        Tts.speak('유통기한 화면입니다. 홈으로 가기를 원하시면 오른쪽으로 스와이프해주세요.');
+      }
       else if (this.state.index_now === 0 && this.state.stat_num !== console_num)//여기서지정해놓은 console_num과 stat_num이 다르다는 뜻은 카메라가 실행중이라는 의미임
         console_num = this.state.stat_num;
       if (this.state.index_now === 2 && this.state.stat_num === console_num)//지금 카메라 실행중이 아닐 때만 음성이 나와야하므로 이를 확인시켜줌
-        Tts.speak('바코드 화면입니다.');
+      {
+        //console.log(this.state.stat_num, console_num);
+        Tts.stop();
+        Tts.speak('바코드 화면입니다. 홈으로 가기를 원하시면 왼쪽으로 스와이프해주세요.');
+      }
       else if (this.state.index_now === 2 && this.state.stat_num !== console_num)//여기서지정해놓은 console_num과 stat_num이 다르다는 뜻은 카메라가 실행중이라는 의미임
         console_num = this.state.stat_num;
     }
-    playTimer = setInterval(playHandler,10000); //setInterval로 홈화면으로 가기 전까지 계속 작동됨.
+    playTimer = setInterval(playHandler,15000); //setInterval로 홈화면으로 가기 전까지 계속 작동됨.
   }
 
   render() {
