@@ -10,8 +10,8 @@ class BarcodeScreen extends React.Component {
     pausePreview: false,
     canDetectBarcode: true,
     barcodes: [],
-    return_num:1,
-    numbbber:1,
+    return_num: 1,
+    numbbber: 1,
   };
 
   renderCamera() {
@@ -49,10 +49,10 @@ class BarcodeScreen extends React.Component {
   barcodeRecognized = object => {
     const {barcodes} = object;
     this.props.route.params.returnCheck(this.state.return_num++);
-    if (!this.state.time_speak)//유통기한을 읽은 뒤에도 타이머가 멈추지 않고 다른 면 찍어달라고 음성 나오는 경우 방지
+    if (!this.state.time_speak)
+      //유통기한을 읽은 뒤에도 타이머가 멈추지 않고 다른 면 찍어달라고 음성 나오는 경우 방지
       var timer = this.state.numbbber++; //시간 안에 유통기한 인식 못 했을 때 나오는 음성.
-    if (timer % 20 == 0)
-      Tts.speak('사물의 다른 면을 찍어주세요.');
+    if (timer % 20 == 0) Tts.speak('사물의 다른 면을 찍어주세요.');
     this.setState({barcodes});
     if (barcodes.length) {
       this.findProductName(barcodes[0].data);
@@ -82,18 +82,30 @@ class BarcodeScreen extends React.Component {
     );
   };
 
-  //내부 barcodeData.JSON 파일 이용
-  //코드 개선 필요.
+  // 네트워크 연결 확인 필요.
   findProductName = data => {
+    var barcode = String(data);
     canDetectBarcode = false;
-    for (var i = 0; i < BarcodeData.DATA.length; i++) {
-      if (data == BarcodeData.DATA[i].BAR_CD) {
-        this.goBack(`찾은 상품명은 ${BarcodeData.DATA[i].PRDLST_NM}입니다.`);
-        return;
-      }
-    }
-    this.goBack('바코드에 해당되는 상품 데이터가 없습니다.');
-    return;
+    var productName = '';
+    fetch(`https://www.beepscan.com/barcode/${barcode}`)
+      .then(response => response.text())
+      .then(text => {
+        // 바코드에 매치되는 상품명을 찾지 못한경우.
+        if (
+          text.includes(`<meta content="${barcode} : " name="description" />`)
+        ) {
+          this.goBack('바코드에 해당하는 상품 정보가 없습니다.');
+        }
+
+        var str = `<meta content="${barcode} : `;
+        productName = text
+          .substring(
+            text.indexOf(str) + str.length,
+            text.indexOf('," name="description" />'),
+          )
+          .replace(/[^ㄱ-힣a\s]/g, '');
+        this.goBack(`찾은 상품명은 ${productName}입니다.`);
+      });
   };
 
   goBack = barcode_speak => {
