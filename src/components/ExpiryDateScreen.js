@@ -81,6 +81,7 @@ class ExpiryDateScreen extends React.Component {
     }
 
     this.setState({textBlocks: textBlocks});
+
   };
 
   detectExpdateData = value => {
@@ -91,7 +92,6 @@ class ExpiryDateScreen extends React.Component {
     if ((index = str.indexOf('2')) != -1) {
       str = str.substring(index, str.length);
     }
-
     //유통기한 데이터는 2로 시작해야 함.
     if (!str.startsWith('2')) {
       return '-1';
@@ -116,7 +116,6 @@ class ExpiryDateScreen extends React.Component {
     if (isNaN(Date.parse(str))) {
       return '-1';
     }
-
     return str;
   };
 
@@ -158,6 +157,7 @@ class ExpiryDateScreen extends React.Component {
   };
 
   takePictureforAndroid = async function (expdate_speak) {
+
     const {navigation, route} = this.props;
     const {leftedString} = this.state;
     const options = {quality: 0.5, base64: true};
@@ -178,6 +178,7 @@ class ExpiryDateScreen extends React.Component {
       console.error(error);
     }
   };
+
 
   takePictureforiOS = expdate_speak => {
     const {navigation, route} = this.props;
