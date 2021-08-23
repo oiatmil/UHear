@@ -285,7 +285,7 @@ class MainScreen extends React.Component {
           style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}
           value={1}>
           <Pressable onLongPress={this.speak_help} style={styles.btn}>
-            <Text style={styles.txt}>Uhear이에요</Text>
+            <Image style={styles.home_image} source={require('./sample.jpg')} />
           </Pressable>
         </View>
         <View
@@ -325,7 +325,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   btn: {
-    backgroundColor: 'white',
+    backgroundColor: '#FFE89A',
     width: '100%',
     height: '100%',
     alignItems: 'center',
@@ -349,6 +349,11 @@ const styles = StyleSheet.create({
     marginVertical: 15,
     height: DEFAULT_HEIGHT / 2.5,
     width: DEFAULT_WIDTH / 2.5,
+  },
+  home_image: {
+    marginVertical: 15,
+    height: '100%',
+    width: '100%',
   },
 });
 

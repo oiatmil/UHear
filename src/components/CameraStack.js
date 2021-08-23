@@ -11,9 +11,9 @@ const CameraStack = () => {
     <Stack.Navigator
       screenOptions={{
         headerStyle: {
-          backgroundColor: '#035',
+          backgroundColor: '#2A1D90',
         },
-        headerTintColor: '#fd0',
+        headerTintColor: '#FFE89A',
       }}>
       <Stack.Screen name="Uhear" component={MainScreen}></Stack.Screen>
       <Stack.Screen
