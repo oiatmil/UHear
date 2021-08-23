@@ -31,21 +31,22 @@ class MainScreen extends React.Component {
     imageIsExist: false,
     image: 'none', // 유통기한 이미지 주소.
     expdate_speak: '',
-    expdate_str: '',
+    leftedString: [],
     barcode_speak: '',
     productNameIsExist: false,
     fullTextAnnotation: 'none',
     index_now: 1,
     stat_num: 2,
     help_num: 0,
+    index: 1,
   };
 
-  returnExpiryDateData = (image, expdate_speak, expdate_str) => {
+  returnExpiryDateData = (image, expdate_speak, leftedString) => {
     if (!this.state.imageIsExist) {
       this.setState({
         image: image,
         expdate_speak: expdate_speak,
-        expdate_str: expdate_str,
+        leftedString: leftedString,
       });
       this.state.imageIsExist = true;
       if (Platform.OS == 'ios') {
@@ -57,13 +58,24 @@ class MainScreen extends React.Component {
   };
 
   readImageDataforiOS = () => {
-    var {expdate_str} = this.state;
-    this.identifyExpDate(expdate_str);
+    var {leftedString} = this.state;
+    var v = '';
+    var arr = [];
+    for (var i in leftedString) {
+      console.log('readImage ' + leftedString[i]);
+      if ((v = this.identifyExpDate(leftedString[i])) != '-1') {
+        arr.push(v);
+      }
+    }
 
-    Tts.stop();
-    Tts.speak(
-      `${this.state.expdate_speak} 다시 듣기를 원하시면 화면을 한 번 터치해주세요.`,
-    );
+    if (arr.length) {
+      this.findExpdateData(arr);
+    } else {
+      Tts.stop();
+      Tts.speak(
+        `${this.state.expdate_speak} 다시 듣기를 원하시면 화면을 한 번 터치해주세요.`,
+      );
+    }
   };
 
   //firebase-mlkit 사용 여부에 따라 바꾸기.
@@ -74,13 +86,24 @@ class MainScreen extends React.Component {
     //   console.log('Text Recognition Cloud: ', cloudTextRecognition);
     // };
 
-    var {expdate_str} = this.state;
-    this.identifyExpDate(expdate_str);
+    var {leftedString} = this.state;
+    var v = '';
+    var arr = [];
+    for (var i in leftedString) {
+      console.log('readImage ' + leftedString[i]);
+      if ((v = this.identifyExpDate(leftedString[i])) != '-1') {
+        arr.push(v);
+      }
+    }
 
-    Tts.stop();
-    Tts.speak(
-      `${this.state.expdate_speak} 다시 듣기를 원하시면 화면을 한 번 터치해주세요.`,
-    );
+    if (arr.length) {
+      this.findExpdateData(arr);
+    } else {
+      Tts.stop();
+      Tts.speak(
+        `${this.state.expdate_speak} 다시 듣기를 원하시면 화면을 한 번 터치해주세요.`,
+      );
+    }
   };
 
   identifyExpDate = inputStr => {
@@ -100,7 +123,7 @@ class MainScreen extends React.Component {
 
     // 여덟자리인지 확인. (자리 수가 모자라서 월일을 빼는 경우가 없도록.)
     if (str.substr(0, 8).length != 8) {
-      return;
+      return '-1';
     }
 
     console.log('identifydata: ' + str);
@@ -114,16 +137,49 @@ class MainScreen extends React.Component {
 
     //Date.parse()를 통해 유효한 날짜 데이터인지 확인.
     if (isNaN(Date.parse(str))) {
-      return;
+      return '-1';
     }
 
-    this.setState({
-      expdate_speak: `제품의 유통기한은 ${year}년 ${month}월 ${date}일 까지입니다.`,
-    });
+    return str;
+
+    // this.setState({
+    //   expdate_speak: `제품의 유통기한은 ${year}년 ${month}월 ${date}일 까지입니다.`,
+    // });
   };
 
-  returnCheck = status => {
-    this.state.stat_num = status;
+  findExpdateData = detectedExpdateArray => {
+    let duplicated = [];
+    for (var i = 0; i < detectedExpdateArray.length; i++) {
+      duplicated.push(0);
+    }
+
+    for (var i = 0; i < detectedExpdateArray.length; i++) {
+      for (var v in detectedExpdateArray) {
+        if (detectedExpdateArray[i] == detectedExpdateArray[v]) {
+          duplicated[i] += 1;
+        }
+      }
+    }
+
+    let max = Math.max(...duplicated);
+    let expdate = '';
+
+    for (var i = 0; i < duplicated.length; i++) {
+      if (max == duplicated[i]) {
+        expdate = detectedExpdateArray[i];
+        break;
+      }
+    }
+
+    let expdateArray = expdate.split('-');
+
+    this.setState({
+      expdate_speak: `제품의 유통기한은 ${expdateArray[0]}년 ${expdateArray[1]}월 ${expdateArray[2]}일 까지입니다.`,
+    });
+    Tts.stop();
+    Tts.speak(
+      `${this.state.expdate_speak} 다시 듣기를 원하시면 화면을 한 번 터치해주세요.`,
+    );
   };
 
   replay_expdate = () => {
@@ -161,7 +217,6 @@ class MainScreen extends React.Component {
       this.state.help_num >= 4
         ? (this.state.help_num = 1)
         : this.state.help_num;
-    console.log(this.state.help_num);
     Tts.stop();
     if (this.state.help_num == 1)
       Tts.speak(
@@ -175,25 +230,14 @@ class MainScreen extends React.Component {
       );
   };
 
-  recamera_expdate = () => {
-    this.state.imageIsExist = false;
-    this.props.navigation.navigate('ExpiryDateScreen', {
-      returnExpiryDateData: this.returnExpiryDateData,
-      returnCheck: this.returnCheck,
-    });
-  };
-
-  recamera_barcode = () => {
-    this.state.productNameIsExist = false;
-    this.props.navigation.navigate('BarcodeScreen', {
-      returnBarcodeData: this.returnBarcodeData,
-      returnCheck: this.returnCheck,
-    });
+  returnCheck = status => {
+    this.state.stat_num = status;
   };
 
   changeScreen = (index1, index2) => {
     Tts.stop();
     this.state.index_now = index1;
+    this.setState({index: index1});
     if (index1 === 0 && index2 === 1) {
       this.state.imageIsExist = false;
       this.props.navigation.navigate('ExpiryDateScreen', {
@@ -210,7 +254,6 @@ class MainScreen extends React.Component {
     }
     if ((index1 === 1 && index2 === 0) || (index1 === 1 && index2 === 2))
       Tts.speak('홈 화면입니다.');
-    this.consolelog();
   };
 
   componentDidMount() {
@@ -220,66 +263,21 @@ class MainScreen extends React.Component {
     );
   }
 
-  consolelog() {
-    //이 함수가 뭐냐면... 유통기한 카메라에서 아무것도 찍지 않고 이전버튼 눌러서 돌아왔을때 아무 소리가 안나 사용자가
-    var playTimer; //현재 어떤 상태인지 모르기때문에 10초에 한번씩 지금 유통기한 화면이라고 알려주는 함수
-    var console_num = 0;
-
-    const playHandler = () => {
-      if (this.state.index_now === 1) {
-        //홈화면으로가면
-        this.state.stat_num = 2;
-        console_num = 0;
-        clearInterval(playTimer); //유통기한 화면임을 알려주는 음성이 멈춤
-      }
-      if (this.state.index_now === 0 && this.state.stat_num === console_num) {
-        //지금 카메라 실행중이 아닐 때만 음성이 나와야하므로 이를 확인시켜줌
-        Tts.stop();
-        //console.log(this.state.stat_num, console_num);
-        Tts.speak(
-          '유통기한 화면입니다. 홈으로 가기를 원하시면 오른쪽으로 스와이프해주세요.',
-        );
-      } else if (
-        this.state.index_now === 0 &&
-        this.state.stat_num !== console_num
-      )
-        //여기서지정해놓은 console_num과 stat_num이 다르다는 뜻은 카메라가 실행중이라는 의미임
-        console_num = this.state.stat_num;
-      if (this.state.index_now === 2 && this.state.stat_num === console_num) {
-        //지금 카메라 실행중이 아닐 때만 음성이 나와야하므로 이를 확인시켜줌
-        //console.log(this.state.stat_num, console_num);
-        Tts.stop();
-        Tts.speak(
-          '바코드 화면입니다. 홈으로 가기를 원하시면 왼쪽으로 스와이프해주세요.',
-        );
-      } else if (
-        this.state.index_now === 2 &&
-        this.state.stat_num !== console_num
-      )
-        //여기서지정해놓은 console_num과 stat_num이 다르다는 뜻은 카메라가 실행중이라는 의미임
-        console_num = this.state.stat_num;
-    };
-    playTimer = setInterval(playHandler, 15000); //setInterval로 홈화면으로 가기 전까지 계속 작동됨.
-  }
-
   render() {
-    const {image, expdate_speak, barcode_speak} = this.state;
+    const {image, expdate_speak, barcode_speak, index} = this.state;
+    console.log('index: ' + index);
     return (
       <SwipeableViews
         style={styles.mainMenu}
-        index={1}
+        index={index}
         onChangeIndex={this.changeScreen}>
         <View
           style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}
           value={0}>
-          <Pressable
-            onPress={this.replay_expdate}
-            onLongPress={this.recamera_expdate}
-            style={styles.btn}>
+          <Pressable onPress={this.replay_expdate} style={styles.btn}>
             <View style={styles.imageContainer}>
               <Image style={styles.image} source={{uri: image}} />
               <Text>{expdate_speak}</Text>
-              {image != 'none' ? null : this.consolelog()}
             </View>
           </Pressable>
         </View>
@@ -293,12 +291,8 @@ class MainScreen extends React.Component {
         <View
           style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}
           value={2}>
-          <Pressable
-            onPress={this.replay_barcode}
-            onLongPress={this.recamera_barcode}
-            style={styles.btn}>
+          <Pressable onPress={this.replay_barcode} style={styles.btn}>
             <Text style={styles.txt}>{barcode_speak}</Text>
-            {barcode_speak != '' ? null : this.consolelog()}
           </Pressable>
         </View>
       </SwipeableViews>
