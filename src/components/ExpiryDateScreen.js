@@ -18,6 +18,7 @@ class ExpiryDateScreen extends React.Component {
     pausePreview: false,
     canDetectText: true,
     textBlocks: [],
+    foundExpiryDate: false,
     numbbber: 1,
     time_speak: false,
     detectedExpdateArray: [],
@@ -81,7 +82,6 @@ class ExpiryDateScreen extends React.Component {
     }
 
     this.setState({textBlocks: textBlocks});
-
   };
 
   detectExpdateData = value => {
@@ -92,6 +92,7 @@ class ExpiryDateScreen extends React.Component {
     if ((index = str.indexOf('2')) != -1) {
       str = str.substring(index, str.length);
     }
+
     //유통기한 데이터는 2로 시작해야 함.
     if (!str.startsWith('2')) {
       return '-1';
@@ -116,6 +117,7 @@ class ExpiryDateScreen extends React.Component {
     if (isNaN(Date.parse(str))) {
       return '-1';
     }
+
     return str;
   };
 
@@ -149,6 +151,8 @@ class ExpiryDateScreen extends React.Component {
     var expdate_speak = `제품의 유통기한은 ${expdateArray[0]}년 ${expdateArray[1]}월 ${expdateArray[2]}일 까지입니다.`;
     console.log(expdate_speak);
 
+    this.setState({foundExpiryDate: true});
+
     if (Platform.OS == 'android') {
       this.takePictureforAndroid(expdate_speak);
     } else if (Platform.OS == 'ios') {
@@ -157,7 +161,6 @@ class ExpiryDateScreen extends React.Component {
   };
 
   takePictureforAndroid = async function (expdate_speak) {
-
     const {navigation, route} = this.props;
     const {leftedString} = this.state;
     const options = {quality: 0.5, base64: true};
@@ -178,7 +181,6 @@ class ExpiryDateScreen extends React.Component {
       console.error(error);
     }
   };
-
 
   takePictureforiOS = expdate_speak => {
     const {navigation, route} = this.props;
@@ -230,6 +232,10 @@ class ExpiryDateScreen extends React.Component {
   render() {
     const {pausePreview} = this.state;
     return <View style={styles.container}>{this.renderCamera()}</View>;
+  }
+
+  componentWillUnmount() {
+    if (!this.state.foundExpiryDate) this.props.route.params.returnCheck(); //카메라에서 아무것도 찍지 않고 goback했을때를 처리하기 위함
   }
 }
 const styles = StyleSheet.create({
