@@ -10,7 +10,8 @@ class BarcodeScreen extends React.Component {
     pausePreview: false,
     canDetectBarcode: true,
     barcodes: [],
-    return_num: 1,
+    foundBarcode: false,
+    numbbber: 1,
   };
 
   renderCamera() {
@@ -47,7 +48,6 @@ class BarcodeScreen extends React.Component {
 
   barcodeRecognized = object => {
     const {barcodes} = object;
-    
     if (!this.state.time_speak)
       //유통기한을 읽은 뒤에도 타이머가 멈추지 않고 다른 면 찍어달라고 음성 나오는 경우 방지
       var timer = this.state.numbbber++; //시간 안에 유통기한 인식 못 했을 때 나오는 음성.
@@ -104,6 +104,7 @@ class BarcodeScreen extends React.Component {
           )
           .replace(/[^ㄱ-힣a\s]/g, '');
 
+        this.setState({foundBarcode: true});
         this.goBack(`찾은 상품명은 ${productName}입니다.`);
       });
   };
@@ -120,6 +121,10 @@ class BarcodeScreen extends React.Component {
 
   render() {
     return <View style={styles.container}>{this.renderCamera()}</View>;
+  }
+
+  componentWillUnmount() {
+    if (!this.state.foundBarcode) this.props.route.params.returnCheck(); //카메라에서 아무것도 찍지 않고 goback했을때를 처리하기 위함
   }
 }
 

@@ -40,6 +40,7 @@ class MainScreen extends React.Component {
     help_num: 0,
     index: 1,
   };
+
   returnExpiryDateData = (image, expdate_speak, leftedString) => {
     if (!this.state.imageIsExist) {
       this.setState({
@@ -84,7 +85,7 @@ class MainScreen extends React.Component {
     //   const cloudTextRecognition = await RNMlKit.cloudTextRecognition(image);
     //   console.log('Text Recognition Cloud: ', cloudTextRecognition);
     // };
-    
+
     var {leftedString} = this.state;
     var v = '';
     var arr = [];
@@ -116,7 +117,7 @@ class MainScreen extends React.Component {
     if (str.startsWith('20') && parseInt(str.substring(2, 4)) < 13) {
       str = '20' + str; // 이렇게 처리할 시, 2001~2012년도 사이 유통기한은 구할 수 없음.
     }
-    
+
     // 여섯 자리 유통기한 포맷의 경우 여덟 자리 포맷으로 수정.
     str = !str.startsWith('20') ? '20' + str : str;
 
@@ -229,8 +230,8 @@ class MainScreen extends React.Component {
       );
   };
 
-  returnCheck = status => {
-    this.state.stat_num = status;
+  returnCheck = () => {
+    this.changeScreen(1, 0);
   };
 
   changeScreen = (index1, index2) => {
@@ -261,7 +262,7 @@ class MainScreen extends React.Component {
         '주의사항 듣기를 원하시면 화면을 길게 눌러주세요.',
     );
   }
-  
+
   render() {
     const {image, expdate_speak, barcode_speak, index} = this.state;
     console.log('index: ' + index);
