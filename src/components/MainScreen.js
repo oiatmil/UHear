@@ -2,6 +2,7 @@ import React from 'react';
 import {
   View,
   TouchableOpacity,
+  TouchableHighlight,
   Pressable,
   StyleSheet,
   Button,
@@ -16,6 +17,7 @@ import Tts from 'react-native-tts';
 import RNMlKit from 'react-native-firebase-mlkit';
 import {ImagePicker, Permissions} from 'expo';
 import uuid from 'uuid';
+import ImageRotate from 'react-native-image-rotate';
 import TesseractOcr, {
   LANG_KOREAN,
   useEventListener,
@@ -38,21 +40,48 @@ class MainScreen extends React.Component {
     index_now: 1,
     stat_num: 2,
     help_num: 0,
-    index: 1,
+    index: 1
   };
 
-  returnExpiryDateData = (image, expdate_speak, leftedString) => {
+  // rotate(angle) {
+  //   const nextAngle = angle;
+  //   ImageRotate.rotateImage(
+  //     this.state.image,
+  //     nextAngle,
+  //     (uri) => {
+  //       this.setState({
+  //         image: uri,
+  //         currentAngle: nextAngle,
+  //         width: this.state.height,
+  //         height: this.state.width,
+  //       });
+  //       //this.readImageData(this.state.image);
+  //     },
+  //     (error) => {
+  //       console.error(error);
+  //     }
+  //   );
+  // }
+
+  // readImageData = async function (image) {
+  //   console.log('data.uri:', image);
+  //   const cloudTextRecognition = await RNMlKit.cloudTextRecognition(image);
+  //   console.log('Text Recognition Cloud: ', cloudTextRecognition);
+  // }
+
+  returnExpiryDateData = (image, expdate_speak, leftedString) => { //몇초 안에 못 읽었을때도 이 함수로 이미지가 찍혀 들어오도록.
+    Tts.stop();
     if (!this.state.imageIsExist) {
       this.setState({
         image: image,
         expdate_speak: expdate_speak,
-        leftedString: leftedString,
+        leftedString: leftedString
       });
       this.state.imageIsExist = true;
       if (Platform.OS == 'ios') {
         this.readImageDataforiOS();
       } else if (Platform.OS == 'android') {
-        this.readImageDataforAndroid();
+        this.readImageDataforAndroid(image);
       }
     }
   };
@@ -80,11 +109,9 @@ class MainScreen extends React.Component {
 
   //firebase-mlkit 사용 여부에 따라 바꾸기.
   readImageDataforAndroid = async function (image) {
-    // readImageData = async function (image){ //사진을 불러온 뒤 글자를 읽는 부분.
-    //   console.log('data.uri:', image);
-    //   const cloudTextRecognition = await RNMlKit.cloudTextRecognition(image);
-    //   console.log('Text Recognition Cloud: ', cloudTextRecognition);
-    // };
+      // console.log('data.uri:', image);
+      // const cloudTextRecognition = await RNMlKit.cloudTextRecognition(image);
+      // console.log('Text Recognition Cloud: ', cloudTextRecognition);
 
     var {leftedString} = this.state;
     var v = '';
@@ -285,7 +312,7 @@ class MainScreen extends React.Component {
           style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}
           value={1}>
           <Pressable onLongPress={this.speak_help} style={styles.btn}>
-            <Text style={styles.txt}>Uhear이에요</Text>
+            <Image style={styles.home_image} source={require('./sample.jpg')} />
           </Pressable>
         </View>
         <View
@@ -325,7 +352,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   btn: {
-    backgroundColor: 'white',
+    backgroundColor: '#FFE89A',
     width: '100%',
     height: '100%',
     alignItems: 'center',
@@ -349,6 +376,11 @@ const styles = StyleSheet.create({
     marginVertical: 15,
     height: DEFAULT_HEIGHT / 2.5,
     width: DEFAULT_WIDTH / 2.5,
+  },
+  home_image: {
+    marginVertical: 15,
+    height: '100%',
+    width: '100%',
   },
 });
 
