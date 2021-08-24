@@ -18,6 +18,7 @@ class ExpiryDateScreen extends React.Component {
     pausePreview: false,
     canDetectText: true,
     textBlocks: [],
+    cloudBlocks: [],
     foundExpiryDate: false,
     numbbber: 1,
     time_speak: false,
@@ -51,13 +52,16 @@ class ExpiryDateScreen extends React.Component {
     if (!this.state.time_speak)
       //유통기한을 읽은 뒤에도 타이머가 멈추지 않고 다른 면 찍어달라고 음성 나오는 경우 방지
       var timer = this.state.numbbber++; //시간 안에 유통기한 인식 못 했을 때 나오는 음성.
-    if (timer % 10 == 0) Tts.speak('사물의 다른 면을 찍어주세요.');
+    if (timer % 8 == 0 && Platform.OS == 'android')
+      this.takePictureforAndroid('유통기한을 찾고 있습니다.');
+    if (timer % 20 == 0) Tts.speak('사물의 다른 면을 찍어주세요.');
 
     const {textBlocks} = object;
 
     if (textBlocks.length) {
       textBlocks.map(({value}) => {
         let s = this.detectExpdateData(value);
+        // console.log('value:',value); ==> 요거슬 아래에서 써먹기!..
 
         if (s != '-1') {
           this.setState(state => ({
@@ -169,18 +173,50 @@ class ExpiryDateScreen extends React.Component {
     const data = await this.camera.takePictureAsync(options);
     const source = data.uri;
     try {
-      if (source) {
+      if (source && expdate_speak != '유통기한을 찾고 있습니다.') {
         route.params.returnExpiryDateData(
           data.uri,
           expdate_speak,
-          leftedString,
+          leftedString
         );
         navigation.goBack();
+      }
+      if (source && expdate_speak == '유통기한을 찾고 있습니다.')
+      { Tts.speak('유통기한을 찾고 있습니다. 잠시 기다려주세요.');
+        this.readImageData(data.uri);
       }
     } catch (error) {
       console.error(error);
     }
   };
+
+  readImageData = async function (image) {
+    const {navigation, route} = this.props;
+    console.log('data.uri:', image);
+    const cloudTextRecognition = await RNMlKit.cloudTextRecognition(image);
+    //console.log('Text Recognition Cloud: ', cloudTextRecognition);
+    if (cloudTextRecognition.length) {
+      cloudTextRecognition.map(({blockText}) => {
+      var s = this.detectExpdateData(blockText);
+      console.log('string:',blockText);
+      console.log('s:',s);
+      if (s != -1){
+        let expdateArray = s.split('-');
+        var expdate_speak = `제품의 유통기한은 ${expdateArray[0]}년 ${expdateArray[1]}월 ${expdateArray[2]}일 까지입니다.`;
+        console.log(expdate_speak);
+
+        route.params.returnExpiryDateData(
+          image,
+          expdate_speak,
+          [s]
+          );
+          navigation.goBack();
+        }
+      });
+    }
+    this.setState({cloudBlocks: cloudTextRecognition});
+    this.setState({foundExpiryDate: true});
+  }
 
   takePictureforiOS = expdate_speak => {
     const {navigation, route} = this.props;
@@ -193,7 +229,7 @@ class ExpiryDateScreen extends React.Component {
         route.params.returnExpiryDateData(
           data.uri,
           expdate_speak,
-          leftedString,
+          leftedString
         );
       });
     } catch (error) {
@@ -207,9 +243,6 @@ class ExpiryDateScreen extends React.Component {
     </View>
   );
   renderTextBlock = ({bounds, value}) => {
-    //여기서 화면을 전환하는 동작도 필요할듯... 재귀로다가 4번...
-    //this.logTextData(value);
-    console.log('size', bounds.size.height);
     return (
       <React.Fragment key={value + bounds.origin.x}>
         <Text
