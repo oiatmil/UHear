@@ -128,40 +128,16 @@ class ExpiryDateScreen extends React.Component {
 
   findExpdateData = () => {
     const {detectedExpdateArray} = this.state;
-    let duplicated = [];
-    for (var i = 0; i < detectedExpdateArray.length; i++) {
-      duplicated.push(0);
-    }
-
-    for (var i = 0; i < detectedExpdateArray.length; i++) {
-      for (var v in detectedExpdateArray) {
-        if (detectedExpdateArray[i] == detectedExpdateArray[v]) {
-          duplicated[i] += 1;
-        }
-      }
-    }
-
-    let max = Math.max(...duplicated);
     let expdate = '';
-
-    for (var i = 0; i < duplicated.length; i++) {
-      if (max == duplicated[i]) {
-        expdate = detectedExpdateArray[i];
-        break;
-      }
-    }
-
-    let expdateArray = expdate.split('-');
-
-    var expdate_speak = `제품의 유통기한은 ${expdateArray[0]}년 ${expdateArray[1]}월 ${expdateArray[2]}일 까지입니다.`;
-    console.log(expdate_speak);
+    expdate = detectedExpdateArray[0];
+    console.log('expdate',expdate);
 
     this.setState({foundExpiryDate: true});
 
     if (Platform.OS == 'android') {
-      this.takePictureforAndroid(expdate_speak);
+      this.takePictureforAndroid(expdate);
     } else if (Platform.OS == 'ios') {
-      this.takePictureforiOS(expdate_speak);
+      this.takePictureforiOS(expdate);
     }
   };
 
@@ -182,9 +158,7 @@ class ExpiryDateScreen extends React.Component {
         navigation.goBack();
       }
       if (source && expdate_speak == '유통기한을 찾고 있습니다.')
-      {
         this.readImageData(data.uri);
-      }
     } catch (error) {
       console.error(error);
     }
@@ -192,39 +166,55 @@ class ExpiryDateScreen extends React.Component {
 
   readImageData = async function (image) {
     const {navigation, route} = this.props;
+    const {leftedString, detectedExpdateArray} = this.state;
     console.log('data.uri:', image);
     Tts.speak('유통기한을 찾고 있습니다. 잠시 기다려주세요.');
-    const cloudTextRecognition = await RNMlKit.cloudTextRecognition(image);
-    //console.log('Text Recognition Cloud: ', cloudTextRecognition);
-    if (cloudTextRecognition.length) {
-      cloudTextRecognition.map(({blockText}) => {
-      var s = this.detectExpdateData(blockText);
-      console.log('string:',blockText);
-      console.log('s:',s);
-      if (s != -1){
-        let expdateArray = s.split('-');
-        var expdate_speak = `제품의 유통기한은 ${expdateArray[0]}년 ${expdateArray[1]}월 ${expdateArray[2]}일 까지입니다.`;
-        console.log(expdate_speak);
-        this.setState({cloudBlocks: cloudTextRecognition});
-        this.setState({foundExpiryDate: true});
-
-        route.params.returnExpiryDateData(
-          image,
-          expdate_speak,
-          [s]
-          );
-          navigation.goBack();
-        }
-      });
+    let expdate ='';
+    try{//try-catch문으로 나눈 이유: cloudTextRecognition이 아무글자도 찾지 못할경우 오류나기때문에.
+      const cloudBlocks = await RNMlKit.cloudTextRecognition(image);
+      if (cloudBlocks.length) {
+        cloudBlocks.map(({blockText}) => {
+          var s = this.detectExpdateData(blockText);
+          console.log('string:',blockText);
+          console.log('s:',s);
+          if (s != -1){
+            if (!this.state.foundExpiryDate){//처음 발견한 날짜를 expdate로 두고
+              expdate = s;
+              this.state.foundExpiryDate = true;
+            }else{//두번째 발견한 날짜를 leftedString으로 둔다.
+              this.setState(state => ({
+                leftedString: [s],
+              }));
+            }
+          }
+        });
+      }
+      if (this.state.foundExpiryDate)
+      {
+          route.params.returnExpiryDateData(
+            image,
+            expdate,
+            leftedString
+            );
+            navigation.goBack();
+      }
       if (!this.state.foundExpiryDate)
       {
         Tts.speak('유통기한을 찾지 못했습니다. 사물의 다른 면을 보여주세요.');
         setTimeout(() => {
+            this.state.canDetectText = true;
+            this.setState({time_speak: false});
+            this.state.numbbber = 1;
+        }, 5000);
+      }
+    }
+    catch (error){
+      Tts.speak('유통기한을 찾지 못했습니다. 사물의 다른 면을 보여주세요.');
+      setTimeout(() => {
           this.state.canDetectText = true;
           this.setState({time_speak: false});
           this.state.numbbber = 1;
-        }, 5000);
-      }
+      }, 5000);
     }
   }
 
