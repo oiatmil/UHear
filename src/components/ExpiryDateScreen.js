@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import {RNCamera} from 'react-native-camera';
 import PendingView from './PendingView';
-import RNMlKit from 'react-native-firebase-mlkit';
+//import RNMlKit from 'react-native-firebase-mlkit';
 import Tts from 'react-native-tts';
 import {stat} from 'react-native-fs';
 

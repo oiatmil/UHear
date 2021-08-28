@@ -14,7 +14,6 @@ import SwipeableViews from 'react-swipeable-views-native';
 import {RNCamera} from 'react-native-camera';
 import PendingView from './PendingView';
 import Tts from 'react-native-tts';
-import RNMlKit from 'react-native-firebase-mlkit';
 import {ImagePicker, Permissions} from 'expo';
 import uuid from 'uuid';
 import ImageRotate from 'react-native-image-rotate';
