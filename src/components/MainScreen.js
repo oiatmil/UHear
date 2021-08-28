@@ -14,7 +14,6 @@ import SwipeableViews from 'react-swipeable-views-native';
 import {RNCamera} from 'react-native-camera';
 import PendingView from './PendingView';
 import Tts from 'react-native-tts';
-import RNMlKit from 'react-native-firebase-mlkit';
 import {ImagePicker, Permissions} from 'expo';
 import uuid from 'uuid';
 import ImageRotate from 'react-native-image-rotate';
@@ -33,6 +32,7 @@ class MainScreen extends React.Component {
     imageIsExist: false,
     image: 'none', // 유통기한 이미지 주소.
     expdate_speak: '',
+    expdate_return: '',
     leftedString: [],
     barcode_speak: '',
     productNameIsExist: false,
@@ -43,45 +43,19 @@ class MainScreen extends React.Component {
     index: 1
   };
 
-  // rotate(angle) {
-  //   const nextAngle = angle;
-  //   ImageRotate.rotateImage(
-  //     this.state.image,
-  //     nextAngle,
-  //     (uri) => {
-  //       this.setState({
-  //         image: uri,
-  //         currentAngle: nextAngle,
-  //         width: this.state.height,
-  //         height: this.state.width,
-  //       });
-  //       //this.readImageData(this.state.image);
-  //     },
-  //     (error) => {
-  //       console.error(error);
-  //     }
-  //   );
-  // }
-
-  // readImageData = async function (image) {
-  //   console.log('data.uri:', image);
-  //   const cloudTextRecognition = await RNMlKit.cloudTextRecognition(image);
-  //   console.log('Text Recognition Cloud: ', cloudTextRecognition);
-  // }
-
-  returnExpiryDateData = (image, expdate_speak, leftedString) => { //몇초 안에 못 읽었을때도 이 함수로 이미지가 찍혀 들어오도록.
+  returnExpiryDateData = (image, expdate_return, leftedString) => { //몇초 안에 못 읽었을때도 이 함수로 이미지가 찍혀 들어오도록.
     Tts.stop();
     if (!this.state.imageIsExist) {
       this.setState({
         image: image,
-        expdate_speak: expdate_speak,
+        expdate_return: expdate_return,
         leftedString: leftedString
       });
       this.state.imageIsExist = true;
       if (Platform.OS == 'ios') {
         this.readImageDataforiOS();
       } else if (Platform.OS == 'android') {
-        this.readImageDataforAndroid(image);
+        this.readImageDataforAndroid();
       }
     }
   };
@@ -108,11 +82,7 @@ class MainScreen extends React.Component {
   };
 
   //firebase-mlkit 사용 여부에 따라 바꾸기.
-  readImageDataforAndroid = async function (image) {
-      // console.log('data.uri:', image);
-      // const cloudTextRecognition = await RNMlKit.cloudTextRecognition(image);
-      // console.log('Text Recognition Cloud: ', cloudTextRecognition);
-
+  readImageDataforAndroid = async function () {
     var {leftedString} = this.state;
     var v = '';
     var arr = [];
@@ -168,10 +138,6 @@ class MainScreen extends React.Component {
     }
 
     return str;
-
-    // this.setState({
-    //   expdate_speak: `제품의 유통기한은 ${year}년 ${month}월 ${date}일 까지입니다.`,
-    // });
   };
 
   findExpdateData = detectedExpdateArray => {
@@ -197,7 +163,8 @@ class MainScreen extends React.Component {
         break;
       }
     }
-
+    if (this.state.expdate_return > expdate) //유통기한화면에서 가져온 인자중 전자와 후자 날짜 대소비교해서 더 미래의 것을 유통기한으로 판단.
+      expdate = this.state.expdate_return;
     let expdateArray = expdate.split('-');
 
     this.setState({
