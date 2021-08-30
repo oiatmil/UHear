@@ -51,6 +51,8 @@ class MainScreen extends React.Component {
         expdate_return: expdate_return,
         leftedString: leftedString
       });
+      console.log('expdate_Return', this.state.expdate_return);
+      console.log('leftedString', this.state.leftedString[0]);
       this.state.imageIsExist = true;
       if (Platform.OS == 'ios') {
         this.readImageDataforiOS();
@@ -96,6 +98,13 @@ class MainScreen extends React.Component {
     if (arr.length) {
       this.findExpdateData(arr);
     } else {
+      let expdate = '';
+      expdate = this.state.expdate_return;
+      let expdateArray = expdate.split('-');
+      console.log('if 후', this.state.expdate_return, expdate);
+      this.setState({
+        expdate_speak: `제품의 유통기한은 ${expdateArray[0]}년 ${expdateArray[1]}월 ${expdateArray[2]}일 까지입니다.`,
+      });
       Tts.stop();
       Tts.speak(
         `${this.state.expdate_speak} 다시 듣기를 원하시면 화면을 한 번 터치해주세요.`,
@@ -163,10 +172,11 @@ class MainScreen extends React.Component {
         break;
       }
     }
+    console.log('if 전', this.state.expdate_return, expdate);
     if (this.state.expdate_return > expdate) //유통기한화면에서 가져온 인자중 전자와 후자 날짜 대소비교해서 더 미래의 것을 유통기한으로 판단.
       expdate = this.state.expdate_return;
     let expdateArray = expdate.split('-');
-
+    console.log('if 후', this.state.expdate_return, expdate);
     this.setState({
       expdate_speak: `제품의 유통기한은 ${expdateArray[0]}년 ${expdateArray[1]}월 ${expdateArray[2]}일 까지입니다.`,
     });
