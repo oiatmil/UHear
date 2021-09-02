@@ -79,7 +79,7 @@ class MainScreen extends React.Component {
     } else {
       Tts.stop();
       Tts.speak(
-        `${this.state.expdate_speak} 다시 듣기를 원하시면 화면을 한 번 터치해주세요.`,
+        `${this.state.expdate_speak} 다시 듣기를 원하시면 화면을 한 번 터치해주세요.`
       );
     }
   };
@@ -236,6 +236,14 @@ class MainScreen extends React.Component {
       );
   };
 
+  speak_home = () => {
+    Tts.stop();
+    Tts.speak(
+      '유희얼입니다. 왼쪽으로 스와이프 시 유통기한, 오른쪽으로 스와이프 시 바코드를 알 수 있습니다.' +
+        '주의사항 듣기를 원하시면 화면을 길게 눌러주세요.',
+    );
+  };
+
   returnCheck = () => {
     this.changeScreen(1, 0);
   };
@@ -292,7 +300,7 @@ class MainScreen extends React.Component {
         <View
           style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}
           value={1}>
-          <Pressable onLongPress={this.speak_help} style={styles.btn}>
+          <Pressable onLongPress={this.speak_help} style={styles.btn} onPress={this.speak_home}>
             <Image style={styles.home_image} source={require('./sample.jpg')} />
           </Pressable>
         </View>
