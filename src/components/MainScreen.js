@@ -40,16 +40,17 @@ class MainScreen extends React.Component {
     index_now: 1,
     stat_num: 2,
     help_num: 0,
-    index: 1
+    index: 1,
   };
 
-  returnExpiryDateData = (image, expdate_return, leftedString) => { //몇초 안에 못 읽었을때도 이 함수로 이미지가 찍혀 들어오도록.
+  returnExpiryDateData = (image, expdate_return, leftedString) => {
+    //몇초 안에 못 읽었을때도 이 함수로 이미지가 찍혀 들어오도록.
     Tts.stop();
     if (!this.state.imageIsExist) {
       this.setState({
         image: image,
         expdate_return: expdate_return,
-        leftedString: leftedString
+        leftedString: leftedString,
       });
       console.log('expdate_Return', this.state.expdate_return);
       console.log('leftedString', this.state.leftedString[0]);
@@ -173,7 +174,8 @@ class MainScreen extends React.Component {
       }
     }
     console.log('if 전', this.state.expdate_return, expdate);
-    if (this.state.expdate_return > expdate) //유통기한화면에서 가져온 인자중 전자와 후자 날짜 대소비교해서 더 미래의 것을 유통기한으로 판단.
+    if (this.state.expdate_return > expdate)
+      //유통기한화면에서 가져온 인자중 전자와 후자 날짜 대소비교해서 더 미래의 것을 유통기한으로 판단.
       expdate = this.state.expdate_return;
     let expdateArray = expdate.split('-');
     console.log('if 후', this.state.expdate_return, expdate);
@@ -195,9 +197,9 @@ class MainScreen extends React.Component {
     }
   };
 
-  returnBarcodeData = barcode_speak => {
+  returnBarcodeData = (image, barcode_speak) => {
     if (!this.state.productNameIsExist) {
-      this.setState({barcode_speak: barcode_speak});
+      this.setState({barcode_speak: barcode_speak, image: image});
       Tts.stop();
       Tts.speak(
         `${barcode_speak} 다시 듣기를 원하시면 화면을 한 번 터치해주세요.`,
@@ -256,8 +258,10 @@ class MainScreen extends React.Component {
         returnCheck: this.returnCheck,
       });
     }
-    if ((index1 === 1 && index2 === 0) || (index1 === 1 && index2 === 2))
+    if ((index1 === 1 && index2 === 0) || (index1 === 1 && index2 === 2)) {
       Tts.speak('홈 화면입니다.');
+      this.setState({image: 'none', expdate_speak: '', barcode_speak: ''});
+    }
   };
 
   componentDidMount() {
@@ -296,7 +300,10 @@ class MainScreen extends React.Component {
           style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}
           value={2}>
           <Pressable onPress={this.replay_barcode} style={styles.btn}>
-            <Text style={styles.txt}>{barcode_speak}</Text>
+            <View style={styles.imageContainer}>
+              <Image style={styles.image} source={{uri: image}} />
+              <Text>{barcode_speak}</Text>
+            </View>
           </Pressable>
         </View>
       </SwipeableViews>

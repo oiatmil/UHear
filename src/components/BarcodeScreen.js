@@ -12,6 +12,7 @@ class BarcodeScreen extends React.Component {
     barcodes: [],
     foundBarcode: false,
     numbbber: 1,
+    image: 'none',
   };
 
   renderCamera() {
@@ -54,6 +55,8 @@ class BarcodeScreen extends React.Component {
     if (timer % 20 == 0) Tts.speak('사물의 다른 면을 찍어주세요.');
     this.setState({barcodes});
     if (barcodes.length) {
+      console.log('barco0de' + JSON.stringify(barcodes[0].uri));
+      this.setState({image: barcodes[0].uri});
       this.findProductName(barcodes[0].data);
     }
   };
@@ -111,7 +114,7 @@ class BarcodeScreen extends React.Component {
 
   goBack = barcode_speak => {
     const {navigation, route} = this.props;
-    route.params.returnBarcodeData(barcode_speak);
+    route.params.returnBarcodeData(this.state.image, barcode_speak);
     navigation.goBack();
   };
 
