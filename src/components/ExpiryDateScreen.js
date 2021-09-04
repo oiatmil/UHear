@@ -1,18 +1,8 @@
-import React, {useEffect} from 'react';
-import {
-  View,
-  TouchableOpacity,
-  StyleSheet,
-  Text,
-  RefreshControlBase,
-  DeviceEventEmitter,
-  Platform,
-} from 'react-native';
+import React from 'react';
+import {View, StyleSheet, Text, Platform} from 'react-native';
 import {RNCamera} from 'react-native-camera';
-import PendingView from './PendingView';
 //import RNMlKit from 'react-native-firebase-mlkit';
 import Tts from 'react-native-tts';
-import {stat} from 'react-native-fs';
 
 class ExpiryDateScreen extends React.Component {
   state = {
