@@ -1,9 +1,7 @@
 import React from 'react';
-import {View, TouchableOpacity, StyleSheet, Text} from 'react-native';
+import {View, StyleSheet, Text} from 'react-native';
 import {RNCamera} from 'react-native-camera';
-import PendingView from './PendingView';
 import Tts from 'react-native-tts';
-import BarcodeData from '../../data/barcodeData.json';
 
 class BarcodeScreen extends React.Component {
   state = {

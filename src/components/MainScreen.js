@@ -1,27 +1,7 @@
 import React from 'react';
-import {
-  View,
-  TouchableOpacity,
-  TouchableHighlight,
-  Pressable,
-  StyleSheet,
-  Button,
-  Text,
-  Image,
-} from 'react-native';
-import {RectButton} from 'react-native-gesture-handler';
+import {View, Pressable, StyleSheet, Text, Image} from 'react-native';
 import SwipeableViews from 'react-swipeable-views-native';
-import {RNCamera} from 'react-native-camera';
-import PendingView from './PendingView';
 import Tts from 'react-native-tts';
-import {ImagePicker, Permissions} from 'expo';
-import uuid from 'uuid';
-import ImageRotate from 'react-native-image-rotate';
-import TesseractOcr, {
-  LANG_KOREAN,
-  useEventListener,
-} from 'react-native-tesseract-ocr';
-import {StackView} from '@react-navigation/stack/lib/commonjs';
 
 const DEFAULT_HEIGHT = 500;
 const DEFAULT_WIDTH = 600;
@@ -79,7 +59,7 @@ class MainScreen extends React.Component {
     } else {
       Tts.stop();
       Tts.speak(
-        `${this.state.expdate_speak} 다시 듣기를 원하시면 화면을 한 번 터치해주세요.`
+        `${this.state.expdate_speak} 다시 듣기를 원하시면 화면을 한 번 터치해주세요.`,
       );
     }
   };
@@ -300,7 +280,10 @@ class MainScreen extends React.Component {
         <View
           style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}
           value={1}>
-          <Pressable onLongPress={this.speak_help} style={styles.btn} onPress={this.speak_home}>
+          <Pressable
+            onLongPress={this.speak_help}
+            style={styles.btn}
+            onPress={this.speak_home}>
             <Image style={styles.home_image} source={require('./sample.jpg')} />
           </Pressable>
         </View>
