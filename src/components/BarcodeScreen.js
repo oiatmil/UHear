@@ -5,17 +5,16 @@ import Tts from 'react-native-tts';
 
 class BarcodeScreen extends React.Component {
   state = {
-    pausePreview: false,
-    canDetectBarcode: true,
-    barcodes: [],
-    foundBarcode: false,
-    numbbber: 1,
-    image: 'none',
+    canDetectBarcode: true, // 현재 바코드 인식을 할 수 있는지
+    barcodes: [], // FirebaseMLKit가 찾은 바코드 데이터 저장
+    foundBarcode: false, // 제품명 찾았는지 여부
+    time: 1, // 안내음성 재생을 위한 타이머
+    image: '', // 바코드 인식 시 찍히는 사진 주소 저장
   };
 
+  // 카메라 설정
   renderCamera() {
     const {canDetectBarcode} = this.state;
-    console.log('canDetect:' + canDetectBarcode);
     return (
       <RNCamera
         style={{width: '100%', height: '100%'}}
@@ -45,21 +44,70 @@ class BarcodeScreen extends React.Component {
     );
   }
 
+  //카메라가 바코드를 인식 할 수 있는 상황 일 때 자동으로 실행
   barcodeRecognized = object => {
     const {barcodes} = object;
-    if (!this.state.time_speak)
-      //유통기한을 읽은 뒤에도 타이머가 멈추지 않고 다른 면 찍어달라고 음성 나오는 경우 방지
-      var timer = this.state.numbbber++; //시간 안에 유통기한 인식 못 했을 때 나오는 음성.
-    if (timer % 20 == 0) Tts.speak('사물의 다른 면을 찍어주세요.');
     this.setState({barcodes});
+
+    //일정시간 바코드를 인식하지 못할 때 안내음성 재생
+    this.speak_help();
+
+    //바코드가 인식되었을 때
     if (barcodes.length) {
-      console.log('barco0de' + JSON.stringify(barcodes[0].uri));
       this.setState({image: barcodes[0].uri});
       this.findProductName(barcodes[0].data);
     }
   };
 
-  //renderBarcodes와 renderBarcode는 없어도 무관. (시각적으로 영역 표시만 하는 역할임.)
+  // 제품명 카메라 안내음성
+  speak_help = () => {
+    const {time} = this.state;
+    this.setState({time: time + 1});
+    if (time % 35 == 0) Tts.speak('사물의 다른 면을 찍어주세요.');
+  };
+
+  // html 파싱을 통해 인식된 바코드의 제품명 검색
+  findProductName = data => {
+    var barcode = String(data);
+    var productName = '';
+
+    this.setState({foundBarcode: true});
+
+    fetch(`https://www.beepscan.com/barcode/${barcode}`)
+      .then(response => response.text())
+      .then(text => {
+        // 바코드에 매치되는 상품명을 찾지 못한경우.
+        if (
+          text.includes(`<meta content="${barcode} : " name="description" />`)
+        ) {
+          this.goBack('바코드에 해당하는 상품 정보가 없습니다.');
+          return;
+        }
+
+        // 바코드로 상풍명을 찾아 productName에 저장.
+        var str = `<meta content="${barcode} : `;
+        productName = text
+          .substring(
+            text.indexOf(str) + str.length,
+            text.indexOf('," name="description" />'),
+          )
+          .replace(/[^ㄱ-힣a\s]/g, '');
+        this.goBack(`찾은 상품명은 ${productName}입니다.`);
+      });
+  };
+
+  // MainScreen에 데이터를 보내고 돌아가기.
+  goBack = barcode_speak => {
+    const {navigation, route} = this.props;
+    route.params.returnBarcodeData(this.state.image, barcode_speak);
+    navigation.goBack();
+  };
+
+  componentDidMount() {
+    Tts.speak('바코드 카메라 입니다. ');
+  }
+
+  // renderBarcodes와 renderBarcode는 바코드 인식의 시각적 표현을 위함.
   renderBarcodes = () => {
     return (
       <View pointerEvents="none">
@@ -82,50 +130,13 @@ class BarcodeScreen extends React.Component {
     );
   };
 
-  // 네트워크 연결 확인 필요.
-  findProductName = data => {
-    var barcode = String(data);
-    canDetectBarcode = false;
-    var productName = '';
-    fetch(`https://www.beepscan.com/barcode/${barcode}`)
-      .then(response => response.text())
-      .then(text => {
-        // 바코드에 매치되는 상품명을 찾지 못한경우.
-        if (
-          text.includes(`<meta content="${barcode} : " name="description" />`)
-        ) {
-          this.goBack('바코드에 해당하는 상품 정보가 없습니다.');
-        }
-
-        var str = `<meta content="${barcode} : `;
-        productName = text
-          .substring(
-            text.indexOf(str) + str.length,
-            text.indexOf('," name="description" />'),
-          )
-          .replace(/[^ㄱ-힣a\s]/g, '');
-
-        this.setState({foundBarcode: true});
-        this.goBack(`찾은 상품명은 ${productName}입니다.`);
-      });
-  };
-
-  goBack = barcode_speak => {
-    const {navigation, route} = this.props;
-    route.params.returnBarcodeData(this.state.image, barcode_speak);
-    navigation.goBack();
-  };
-
-  componentDidMount() {
-    Tts.speak('바코드 카메라 입니다. ');
-  }
-
   render() {
     return <View style={styles.container}>{this.renderCamera()}</View>;
   }
 
+  //카메라에서 아무것도 찍지 않고 goback했을때
   componentWillUnmount() {
-    if (!this.state.foundBarcode) this.props.route.params.returnCheck(); //카메라에서 아무것도 찍지 않고 goback했을때를 처리하기 위함
+    if (!this.state.foundBarcode) this.props.route.params.returnCheck();
   }
 }
 
@@ -134,20 +145,6 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'column',
     backgroundColor: 'black',
-  },
-  preview: {
-    flex: 1,
-    justifyContent: 'flex-end',
-    alignItems: 'center',
-  },
-  button: {
-    flex: 0,
-    backgroundColor: '#fff',
-    borderRadius: 5,
-    padding: 15,
-    paddingHorizontal: 20,
-    alignSelf: 'center',
-    margin: 20,
   },
   text: {
     padding: 10,
@@ -161,7 +158,6 @@ const styles = StyleSheet.create({
     color: '#F00',
     position: 'absolute',
     textAlign: 'center',
-    //fontSize: 40,
     backgroundColor: 'transparent',
   },
 });

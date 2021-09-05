@@ -8,6 +8,7 @@ const Stack = createStackNavigator();
 
 const CameraStack = () => {
   return (
+    // 유통기한과 제품명 인식에 별개의 카메라를 사용하기 위해 각 screen을 분리.
     <Stack.Navigator
       screenOptions={{
         headerStyle: {
@@ -25,24 +26,6 @@ const CameraStack = () => {
         component={BarcodeScreen}></Stack.Screen>
     </Stack.Navigator>
   );
-};
-
-const ExpiryDateScreenAnimation = {
-  gestureDirection: 'horizontal',
-  cardStyleInterpolator: ({current, layouts}) => {
-    return {
-      cardStyle: {
-        transform: [
-          {
-            translateX: current.progress.interpolate({
-              inputRange: [0, layouts.screen.width],
-              outputRange: [layouts.screen.width, 0],
-            }),
-          },
-        ],
-      },
-    };
-  },
 };
 
 export default CameraStack;
