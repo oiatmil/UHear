@@ -3,106 +3,73 @@ import {View, Pressable, StyleSheet, Text, Image} from 'react-native';
 import SwipeableViews from 'react-swipeable-views-native';
 import Tts from 'react-native-tts';
 
+//제품명 및 유통기한 인식 후 제공되는 이미지 크기
 const DEFAULT_HEIGHT = 500;
 const DEFAULT_WIDTH = 600;
 
 class MainScreen extends React.Component {
   state = {
-    pausePreview: false,
-    imageIsExist: false,
-    image: 'none', // 유통기한 이미지 주소.
-    expdate_speak: '',
-    expdate_return: '',
-    leftedString: [],
-    barcode_speak: '',
-    productNameIsExist: false,
-    fullTextAnnotation: 'none',
-    index_now: 1,
-    stat_num: 2,
-    help_num: 0,
-    index: 1,
+    image: '', // 유통기한이나 제품명을 인식했을 때 스크린에 표시할 이미지 주소
+
+    //유통기한 데이터 처리를 위한 state
+    expiryDateIsExist: false, //ExpiryDateScreen에서 날짜 데이터를 가지고 돌아왔는지 확인
+    // ExpiryDateScreen에서 가져온 날짜 데이터는 유통기한일 수도 있고, 제조일자 일수도 있으므로 MainScreen에서 한번 더 판별하기 위한 state를 둔다.
+    returned_date: '', // 유통기한으로 추정되는 데이터
+    returned_string: [], // 유통기한이 있을 수도 있는 문자열
+    expdate_speak: '', // 유통기한으로 확정된 데이터와 안내 문구 함께 저장
+
+    //제품명 데이터 처리를 위한 state
+    productNameIsExist: false, //BarcodeScreen에서 제품명 데이터를 가지고 돌아왔는지 확인
+    productName_speak: '', // 제품명으로 확정된 데이터와 안내 문구 함께 저장
+
+    help_num: 0, // 앱 사용 방법 안내 음성
+    currentViewIndex: 1,
   };
 
-  returnExpiryDateData = (image, expdate_return, leftedString) => {
-    //몇초 안에 못 읽었을때도 이 함수로 이미지가 찍혀 들어오도록.
+  // ExpiryDateScreen에서 데이터를 전달 받아 처리.
+  returnExpiryDateData = (image, returned_date, returned_string) => {
     Tts.stop();
-    if (!this.state.imageIsExist) {
+
+    if (!this.state.expiryDateIsExist) {
       this.setState({
         image: image,
-        expdate_return: expdate_return,
-        leftedString: leftedString,
+        returned_date: returned_date,
+        returned_string: returned_string,
+        expiryDateIsExist: true,
       });
-      console.log('expdate_Return', this.state.expdate_return);
-      console.log('leftedString', this.state.leftedString[0]);
-      this.state.imageIsExist = true;
-      if (Platform.OS == 'ios') {
-        this.readImageDataforiOS();
-      } else if (Platform.OS == 'android') {
-        this.readImageDataforAndroid();
-      }
+
+      this.check_ExpiryDate();
     }
   };
 
-  readImageDataforiOS = () => {
-    var {leftedString} = this.state;
+  // ExpiryDateScreen에서 가져온 날짜가 유통기한이 맞는지 확인하기 위해.
+  check_ExpiryDate = () => {
+    var {returned_string} = this.state;
     var v = '';
     var arr = [];
-    for (var i in leftedString) {
-      console.log('readImage ' + leftedString[i]);
-      if ((v = this.identifyExpDate(leftedString[i])) != '-1') {
+
+    // ExpiryDateScreen이 보낸 문자열(returned_string)에서 날짜 데이터가 있는지 확인.
+    for (var i in returned_string) {
+      if ((v = this.identifyDate(returned_string[i])) != '-1') {
         arr.push(v);
       }
     }
 
-    if (arr.length) {
-      this.findExpdateData(arr);
-    } else {
-      Tts.stop();
-      Tts.speak(
-        `${this.state.expdate_speak} 다시 듣기를 원하시면 화면을 한 번 터치해주세요.`,
-      );
-    }
+    // 위에서 찾은 날짜데이터들(arr)을 비교하여 유통기한 판별
+    this.findExpdateData(arr);
   };
 
-  //firebase-mlkit 사용 여부에 따라 바꾸기.
-  readImageDataforAndroid = async function () {
-    var {leftedString} = this.state;
-    var v = '';
-    var arr = [];
-    for (var i in leftedString) {
-      console.log('readImage ' + leftedString[i]);
-      if ((v = this.identifyExpDate(leftedString[i])) != '-1') {
-        arr.push(v);
-      }
-    }
-
-    if (arr.length) {
-      this.findExpdateData(arr);
-    } else {
-      let expdate = '';
-      expdate = this.state.expdate_return;
-      let expdateArray = expdate.split('-');
-      console.log('if 후', this.state.expdate_return, expdate);
-      this.setState({
-        expdate_speak: `제품의 유통기한은 ${expdateArray[0]}년 ${expdateArray[1]}월 ${expdateArray[2]}일 까지입니다.`,
-      });
-      Tts.stop();
-      Tts.speak(
-        `${this.state.expdate_speak} 다시 듣기를 원하시면 화면을 한 번 터치해주세요.`,
-      );
-    }
-  };
-
-  identifyExpDate = inputStr => {
+  //날짜가 맞는지 검사
+  identifyDate = inputStr => {
     var str = String(inputStr).replace(/[^0-9]/g, '');
     var index = 0;
     if ((index = str.indexOf('2')) != -1) {
       str = str.substring(index, str.length);
     }
 
-    //2020년 유통기한에 대한 처리 (지금 시점에서 필요할지는 잘 모르겠음.)
+    //2020년 유통기한에 대한 처리
     if (str.startsWith('20') && parseInt(str.substring(2, 4)) < 13) {
-      str = '20' + str; // 이렇게 처리할 시, 2001~2012년도 사이 유통기한은 구할 수 없음.
+      str = '20' + str;
     }
 
     // 여섯 자리 유통기한 포맷의 경우 여덟 자리 포맷으로 수정.
@@ -112,8 +79,6 @@ class MainScreen extends React.Component {
     if (str.substr(0, 8).length != 8) {
       return '-1';
     }
-
-    console.log('identifydata: ' + str);
 
     var year = str.substring(0, 4);
     var month = str.substring(4, 6);
@@ -130,35 +95,45 @@ class MainScreen extends React.Component {
     return str;
   };
 
-  findExpdateData = detectedExpdateArray => {
-    let duplicated = [];
-    for (var i = 0; i < detectedExpdateArray.length; i++) {
-      duplicated.push(0);
-    }
+  // 유통기한 날짜를 찾고 확정 짓는다.
+  findExpdateData = detectedDateArray => {
+    let date = '';
+    const {returned_date} = this.state;
+    console.log('findExpdate');
 
-    for (var i = 0; i < detectedExpdateArray.length; i++) {
-      for (var v in detectedExpdateArray) {
-        if (detectedExpdateArray[i] == detectedExpdateArray[v]) {
-          duplicated[i] += 1;
+    //detectedDateArray에 요소가 있다는 것은 날짜데이터가 있다는 것임으로.
+    if (detectedDateArray.length) {
+      console.log('here!');
+      let duplicated = [];
+      for (var i in detectedDateArray) {
+        duplicated.push(0);
+      }
+
+      for (var i in detectedDateArray) {
+        for (var j in detectedDateArray) {
+          if (detectedDateArray[i] == detectedDateArray[j]) {
+            duplicated[i] += 1;
+          }
         }
       }
-    }
 
-    let max = Math.max(...duplicated);
-    let expdate = '';
+      let max = Math.max(...duplicated);
 
-    for (var i = 0; i < duplicated.length; i++) {
-      if (max == duplicated[i]) {
-        expdate = detectedExpdateArray[i];
-        break;
+      for (var i in duplicated) {
+        if (max == duplicated[i]) {
+          date = detectedDateArray[i];
+          break;
+        }
       }
+
+      //ExpiryDateScreen에서 가져온 인자 중 전자와 후자 날짜 대소비교해서 더 미래의 것을 유통기한으로 판단.
+      if (returned_date > date) date = returned_date;
+    } else {
+      //detectedDateArray에 요소가 없으면 ExpiryDateScreen에서 가져온 날짜(returned_date)가 유통기한.
+      date = returned_date;
     }
-    console.log('if 전', this.state.expdate_return, expdate);
-    if (this.state.expdate_return > expdate)
-      //유통기한화면에서 가져온 인자중 전자와 후자 날짜 대소비교해서 더 미래의 것을 유통기한으로 판단.
-      expdate = this.state.expdate_return;
-    let expdateArray = expdate.split('-');
-    console.log('if 후', this.state.expdate_return, expdate);
+
+    let expdateArray = date.split('-');
     this.setState({
       expdate_speak: `제품의 유통기한은 ${expdateArray[0]}년 ${expdateArray[1]}월 ${expdateArray[2]}일 까지입니다.`,
     });
@@ -168,52 +143,65 @@ class MainScreen extends React.Component {
     );
   };
 
+  //터치 이벤트 발생 시 유통기한 안내음성을 재생할 수 있는 콜백함수
   replay_expdate = () => {
-    const {expdate_speak} = this.state;
-    if (this.state.imageIsExist) {
-      //Image가 있다는 것은 유통기한을 찾았음을 의미하므로
+    const {expdate_speak, expiryDateIsExist} = this.state;
+
+    if (expiryDateIsExist) {
       Tts.stop();
-      Tts.speak(expdate_speak); //이 때 화면을 클릭하면 유통기한을 다시 읽어줌.
+      Tts.speak(expdate_speak);
     }
   };
 
-  returnBarcodeData = (image, barcode_speak) => {
+  // BarcodeScreen에서 데이터를 전달 받아 처리.
+  returnBarcodeData = (image, productName_speak) => {
     if (!this.state.productNameIsExist) {
-      this.setState({barcode_speak: barcode_speak, image: image});
+      this.setState({
+        productName_speak: productName_speak,
+        image: image,
+        productNameIsExist: true,
+      });
       Tts.stop();
       Tts.speak(
-        `${barcode_speak} 다시 듣기를 원하시면 화면을 한 번 터치해주세요.`,
+        `${productName_speak} 다시 듣기를 원하시면 화면을 한 번 터치해주세요.`,
       );
-      this.state.productNameIsExist = true;
     }
   };
 
+  //터치 이벤트 발생 시 제품명 안내음성을 재생할 수 있는 콜백함수
   replay_barcode = () => {
-    const {barcode_speak} = this.state;
+    const {productName_speak} = this.state;
     if (this.state.productNameIsExist) {
       Tts.stop();
-      Tts.speak(barcode_speak);
+      Tts.speak(productName_speak);
     }
   };
 
+  //어플 사용 방법 안내 음성
   speak_help = () => {
-    //누를 때마다 새로운 주의사항 말해줌.
-    this.state.help_num++;
-    this.state.help_num =
-      this.state.help_num >= 4
-        ? (this.state.help_num = 1)
-        : this.state.help_num;
+    const {help_num} = this.state;
+
+    this.setState({
+      help_num: help_num + 1 > 3 ? 1 : help_num + 1,
+    });
+
     Tts.stop();
-    if (this.state.help_num == 1)
-      Tts.speak(
-        '윗면과 아랫면이 있는 제품의 경우 윗면이나 아랫면을 먼저 보여주시면 더 빨리 찾으실 수 있습니다.',
-      );
-    if (this.state.help_num == 2)
-      Tts.speak('카메라는 밝은 곳에서 실행해야 인식이 잘 됩니다.');
-    if (this.state.help_num == 3)
-      Tts.speak(
-        '제품의 유통기한 글자가 바래졌을 경우 인식이 어려울 수 있습니다.',
-      );
+
+    switch (help_num) {
+      case 1:
+        Tts.speak(
+          '윗면과 아랫면이 있는 제품의 경우 윗면이나 아랫면을 먼저 보여주시면 더 빨리 찾으실 수 있습니다.',
+        );
+        break;
+      case 2:
+        Tts.speak('카메라는 밝은 곳에서 실행해야 인식이 잘 됩니다.');
+        break;
+      case 3:
+        Tts.speak(
+          '제품의 유통기한 글자가 바래졌을 경우 인식이 어려울 수 있습니다.',
+        );
+        break;
+    }
   };
 
   speak_home = () => {
@@ -224,34 +212,45 @@ class MainScreen extends React.Component {
     );
   };
 
+  // 뒤로가기 이벤트 발생 시 샐행되는 함수. BarcodeScreen과 ExpiryDateScreen에 각각 주어짐.
   returnCheck = () => {
-    this.changeScreen(1, 0);
+    this.changeScreen(1, 0); //자동으로 뷰전환시킴.
   };
 
-  changeScreen = (index1, index2) => {
+  //스와이프(뷰 전환) 시 실행되는 함수.
+  changeScreen = (current, previous) => {
     Tts.stop();
-    this.state.index_now = index1;
-    this.setState({index: index1});
-    if (index1 === 0 && index2 === 1) {
-      this.state.imageIsExist = false;
+    this.setState({currentViewIndex: current});
+
+    // 유통기한 뷰로 이동할 때
+    if (current === 0 && previous === 1) {
+      this.state.expiryDateIsExist = false;
       this.props.navigation.navigate('ExpiryDateScreen', {
         returnExpiryDateData: this.returnExpiryDateData,
         returnCheck: this.returnCheck,
       });
     }
-    if (index1 === 2 && index2 === 1) {
+
+    // 제품명 뷰로 이동할 때
+    if (current === 2 && previous === 1) {
       this.state.productNameIsExist = false;
       this.props.navigation.navigate('BarcodeScreen', {
         returnBarcodeData: this.returnBarcodeData,
         returnCheck: this.returnCheck,
       });
     }
-    if ((index1 === 1 && index2 === 0) || (index1 === 1 && index2 === 2)) {
+
+    // 제품명, 유통기한 스크린(뷰)에서 홈화면으로 돌아왔을 때
+    if (
+      (current === 1 && previous === 0) ||
+      (current === 1 && previous === 2)
+    ) {
       Tts.speak('홈 화면입니다.');
-      this.setState({image: 'none', expdate_speak: '', barcode_speak: ''});
+      this.setState({image: '', expdate_speak: '', productName_speak: ''});
     }
   };
 
+  //앱 실행 시 제일 먼저 들리는 안내 음성.
   componentDidMount() {
     Tts.speak(
       '유희얼입니다. 왼쪽으로 스와이프 시 유통기한, 오른쪽으로 스와이프 시 바코드를 알 수 있습니다.' +
@@ -260,12 +259,12 @@ class MainScreen extends React.Component {
   }
 
   render() {
-    const {image, expdate_speak, barcode_speak, index} = this.state;
-    console.log('index: ' + index);
+    const {image, expdate_speak, productName_speak, currentViewIndex} =
+      this.state;
     return (
       <SwipeableViews
         style={styles.mainMenu}
-        index={index}
+        index={currentViewIndex}
         onChangeIndex={this.changeScreen}>
         <View
           style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}
@@ -293,7 +292,7 @@ class MainScreen extends React.Component {
           <Pressable onPress={this.replay_barcode} style={styles.btn}>
             <View style={styles.imageContainer}>
               <Image style={styles.image} source={{uri: image}} />
-              <Text>{barcode_speak}</Text>
+              <Text>{productName_speak}</Text>
             </View>
           </Pressable>
         </View>
@@ -303,25 +302,6 @@ class MainScreen extends React.Component {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    flexDirection: 'column',
-    backgroundColor: 'black',
-  },
-  preview: {
-    flex: 1,
-    justifyContent: 'flex-end',
-    alignItems: 'center',
-  },
-  button: {
-    flex: 0,
-    backgroundColor: '#fff',
-    borderRadius: 5,
-    padding: 15,
-    paddingHorizontal: 20,
-    alignSelf: 'center',
-    margin: 20,
-  },
   mainMenu: {
     backgroundColor: 'white',
     flex: 1,
@@ -332,16 +312,6 @@ const styles = StyleSheet.create({
     height: '100%',
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  txt: {
-    color: 'black',
-    textAlign: 'center',
-    fontSize: 20,
-  },
-  rectButton: {
-    width: '100%',
-    height: '100%',
-    backgroundColor: 'blue',
   },
   imageContainer: {
     justifyContent: 'center',
