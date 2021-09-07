@@ -73,10 +73,10 @@
 
 ## 개발 환경
 
-IDE : Visual Studio Code / Android Studio / Swift  
+IDE : Visual Studio Code / Android Studio / Xcode  
 라이브러리 : React-native  
 사용 언어 : HTML / CSS / JavaScript  
-SDK : firebase MLKit / Google Cloud Vision  
+SDK : firebase MLKit
 개발 서버와 연결 : Node.js  
 협업 툴 : git / Google Drive
 
