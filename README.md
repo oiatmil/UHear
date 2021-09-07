@@ -25,14 +25,51 @@
 
 ### 📌 iOS
 
-1.  Xcode  
-    ...
-2.  TestFlight  
-    ...
+1. 코드 복사
+   ```sh
+   git clone https://github.com/oiatmil/UHear.git
+   ```
+2. UHear 폴더에서 NPM packages 설치
+   ```sh
+   npm install
+   ```
+3. pod 설치
+   ```sh
+   cd ios && pod install && cd ..
+   ```
+4. Xcode에서 시뮬레이터 기기 선택하고 실행
 
 ### 📌 Android
 
-..
+1. 코드 복사
+   ```sh
+   git clone https://github.com/oiatmil/UHear.git
+   ```
+2. Uhear 폴더 내에서 yarn install 로 필요한 모듈 깔기
+   ```sh
+   yarn install
+   ```
+3. android studio에서 Uhear폴더 open 후 sync project with gradle files
+
+###
+
+4. src/components/ExpiryDateScreen.js 의 import RNMlkit from 'react-native-firebase-mlkit' 주석해제
+
+###
+
+5.  ```sh
+    yarn add react-native-firebase-mlkit
+    ```
+
+###
+
+6. android studio에서 시뮬레이셜 돌릴 android 기기 연결
+
+###
+
+7.  ```sh
+    npx react-native run-android
+    ```
 
 ## 개발 환경
 
@@ -58,5 +95,5 @@ SDK : firebase MLKit / Google Cloud Vision
 
 ## Contributors
 
-<a href="https://github.com/oiatmil"><img src="https://avatars.githubusercontent.com/u/75559067?v=4" style="width: 3%"> Lee Sumin</img></a>  
-<a href="https://github.com/dimplehh"><img src="https://avatars.githubusercontent.com/u/57757760?v=4" style="width: 3%"> Lee Hyunhee</img></a>
+<a href="https://github.com/oiatmil"><img src="https://avatars.githubusercontent.com/u/75559067?v=4" style="width: 3%"> 이수민</img></a>  
+<a href="https://github.com/dimplehh"><img src="https://avatars.githubusercontent.com/u/57757760?v=4" style="width: 3%"> 이현희</img></a>
