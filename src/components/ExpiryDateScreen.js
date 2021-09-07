@@ -107,9 +107,9 @@ class ExpiryDateScreen extends React.Component {
     if (!str.startsWith('2')) {
       return '-1';
     }
-    // 2020년 유통기한에 대한 처리 (지금 시점에서 필요할지는 잘 모르겠음.)
+    // 2020년 유통기한에 대한 처리
     if (str.startsWith('20') && parseInt(str.substring(2, 4)) < 13) {
-      str = '20' + str; // 이렇게 처리할 시, 2001~2012년도 사이 유통기한은 구할 수 없음.
+      str = '20' + str;
     }
     // 여섯 자리 유통기한 포맷의 경우 여덟 자리 포맷으로 수정.
     str = !str.startsWith('20') ? '20' + str : str;
@@ -121,8 +121,10 @@ class ExpiryDateScreen extends React.Component {
     var year = str.substring(0, 4);
     var month = str.substring(4, 6);
     var date = str.substring(6, 8);
+
     //Date.parse() 를 할 수 있는 포맷으로 전환.
     str = `${year}-${month}-${date}`;
+
     //Date.parse()를 통해 유효한 날짜 데이터인지 확인.
     if (isNaN(Date.parse(str))) {
       return '-1';
